@@ -1,0 +1,52 @@
+.evento-card {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  background: #fff;
+  padding: 1.5rem 1.5rem; /* Padding superior e inferior mayor */
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  max-width: 1000px;
+  margin: 2rem auto; /* Separación con otros elementos */
+  align-items: center;
+}
+
+.evento-info {
+  flex: 1;
+  min-width: 250px;
+  text-align: left;
+}
+
+.evento-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 0.5rem;
+}
+
+.evento-text {
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+.evento-img {
+  width: 300px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 1rem;
+}
+
+/* 🔁 Responsive: mismo estilo en móvil y desktop */
+@media (max-width: 768px) {
+  .evento-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+
+  .evento-info  {
+    text-align: center;
+  }
+}

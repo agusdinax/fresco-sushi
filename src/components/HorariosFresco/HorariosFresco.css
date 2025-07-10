@@ -1,0 +1,76 @@
+.horario-bar {
+  width: 100%;
+  background: #fff;
+  backdrop-filter: blur(10px);
+  padding: 0.5rem;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: #444;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  position: relative;
+  z-index: 100;
+  text-align: center;
+  transition: background 0.3s ease, color 0.3s ease;
+  margin-bottom: 1rem;
+  /* OPCIONAL: hacer sticky debajo del header */
+  position: sticky;
+  top: 65px; /* o lo que mida tu header */
+  height: 5.3rem;
+}
+
+.horario-bar.open {
+  background-color: #e6f4ea;
+  color: #218838;
+}
+
+.horario-bar.closed {
+  background-color: #fde7e9;
+  color: #e63946;
+}
+
+.horario-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+.horario-status {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.horario-franja {
+  font-size: 0.85rem;
+  color: inherit;
+}
+
+.horario-ubicacion {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: inherit;
+}
+
+@media (max-width: 720px) {
+  .horario-bar {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+    top: 65px;
+  }
+
+  .horario-content {
+    gap: 0.3rem;
+  }
+
+  .horario-ubicacion {
+    font-size: 0.75rem;
+  }
+}
