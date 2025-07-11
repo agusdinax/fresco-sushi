@@ -1,35 +1,35 @@
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
-import logo from "../../assets/FRESCO.png";
 import "./Footer.css";
+import logo from "../../assets/FRESCO.png"; // Asegurate de tener el logo en esa ruta
 
 export const Footer = () => {
   return (
-    <footer className="footer-container">
-      <div className="footer-socials">
+    <footer className="footer">
+      <div className="footer-left">
         <a
-          href="https://instagram.com/tuusuario"
+          href="https://www.instagram.com/frescosushi/"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Instagram"
         >
-          <FaInstagram size={24} />
+          <FaInstagram className="footer-icon" />
         </a>
         <a
-          href="https://wa.me/549XXXXXXXXXX"
+          href="https://wa.me/5491123456789"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="WhatsApp"
         >
-          <FaWhatsapp size={24} />
+          <FaWhatsapp className="footer-icon" />
         </a>
       </div>
 
-      <div className="footer-logo">
-        <img src={logo} alt="Logo del emprendimiento" />
-      </div>
+        <a href="#header" className="footer-center">
+          <img src={logo} alt="Logo del emprendimiento" className="footer-logo" />
+        </a>
 
-      <div className="footer-location">
-        <p>📍 Balcarce, Buenos Aires, Argentina</p>
+      <div className="footer-right">
+        <p className="footer-location">📍 Balcarce, Buenos Aires, Argentina</p>
       </div>
     </footer>
   );

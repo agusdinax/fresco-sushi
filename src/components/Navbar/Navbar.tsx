@@ -28,7 +28,7 @@ export const Navbar = ({ onToggleCheckout, isCheckoutOpen }: NavbarProps) => {
         </div>
 
         <div className={`navbar__links ${menuOpen ? "active" : ""}`}>
-          <a href="#menu">MENÚ</a>
+          <a href="#header">MENÚ</a>
           <a href="#sushiman">SUSHIMAN</a>
           <a href="#eventos">EVENTOS</a>
           <a href="#galeria">GALERÍA</a>

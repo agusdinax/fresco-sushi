@@ -18,7 +18,7 @@
   margin-bottom: 1rem;
   /* OPCIONAL: hacer sticky debajo del header */
   position: sticky;
-  top: 65px; /* o lo que mida tu header */
+  top: 82px; /* o lo que mida tu header */
   height: 5.3rem;
 }
 
@@ -63,7 +63,8 @@
   .horario-bar {
     padding: 0.75rem;
     font-size: 0.85rem;
-    top: 65px;
+    top: 82px;
+    z-index: 100;
   }
 
   .horario-content {

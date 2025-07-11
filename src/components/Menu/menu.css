@@ -79,7 +79,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: background-color 0.3s ease;
 }
 
@@ -121,7 +121,7 @@
 
 .product-card__qty {
   font-weight: bold;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 
@@ -159,10 +159,14 @@
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: background-color 0.1s ease;
 }
 
 .finalize-btn.delayed:hover {
   background-color: #cc393c; /* verde oscuro al hover */
+}
+
+.h2menu {
+  font-size: var( --title);
 }

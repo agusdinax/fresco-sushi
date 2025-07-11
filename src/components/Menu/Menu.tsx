@@ -10,8 +10,8 @@ export const Menu = () => {
   const [showCheckout, setShowCheckout] = useState(false);
 
   return (
-    <div className="menu-container" id="menu">
-      <h2>🍣 Nuestro Menú</h2>
+    <div className="menu-container">
+      <h2 className="h2menu">🍣MENÚ</h2>
       <CategorySelector
         categories={categories}
         selected={selectedCategory}

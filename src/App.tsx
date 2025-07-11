@@ -33,10 +33,12 @@ export const App = () => {
         <HeaderGallery />
         <HorariosFresco />
         <main style={{ flex: 1 }}>
-          <Menu />
+          <div id="menu">
+            <Menu />
+          </div>
 
           <SushimanCard
-            image="src/assets/HEADE.jpg"
+            image="src/assets/sushiman.jpg"
             name="Nuestro Sushiman"
             description="Con años de experiencia, crea piezas únicas para cada evento. Pasión, técnica y frescura en cada bocado."
           />
