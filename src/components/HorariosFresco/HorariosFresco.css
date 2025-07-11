@@ -2,11 +2,8 @@
   width: 100%;
   background: #fff;
   backdrop-filter: blur(10px);
-  padding: 0.5rem;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
-  font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 0.9rem;
-  color: #444;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -16,9 +13,6 @@
   text-align: center;
   transition: background 0.3s ease, color 0.3s ease;
   margin-bottom: 1rem;
-  /* OPCIONAL: hacer sticky debajo del header */
-  position: sticky;
-  top: 82px; /* o lo que mida tu header */
   height: 5.3rem;
 }
 
@@ -63,7 +57,6 @@
   .horario-bar {
     padding: 0.75rem;
     font-size: 0.85rem;
-    top: 82px;
     z-index: 100;
   }
 

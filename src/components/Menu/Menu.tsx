@@ -1,13 +1,17 @@
+// Menu.tsx
 import { useState } from "react";
 import { products, categories } from "../../data/menuData";
 import { ProductCard } from "./ProductCard";
 import { CategorySelector } from "./CategorySelector";
-import { CheckoutForm } from "./CheckoutForm";
 import "./menu.css";
 
-export const Menu = () => {
+interface MenuProps {
+  onFinalizePurchase: () => void;
+  checkoutOpen: boolean;
+}
+
+export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
   const [selectedCategory, setSelectedCategory] = useState("combos");
-  const [showCheckout, setShowCheckout] = useState(false);
 
   return (
     <div className="menu-container">
@@ -27,27 +31,20 @@ export const Menu = () => {
               key={product.id}
               product={product}
               onFinalize={() => {
-                if (!showCheckout) {
-                  setShowCheckout(true);
+                // Solo abre si aún no está abierto
+                if (!checkoutOpen) {
+                  onFinalizePurchase();
 
-                  // Scroll al checkout después de abrirlo (opcional)
+                  // Scroll al carrito
                   setTimeout(() => {
                     document
-                      .querySelector(".checkout-slider")
+                      .querySelector(".cart-sidebar")
                       ?.scrollIntoView({ behavior: "smooth" });
                   }, 150);
                 }
               }}
             />
           ))}
-      </div>
-
-      {/* Slider del formulario de checkout */}
-      <div className={`checkout-slider ${showCheckout ? "open" : ""}`}>
-        <button className="close-btn" onClick={() => setShowCheckout(false)}>
-          ×
-        </button>
-        <CheckoutForm />
       </div>
     </div>
   );

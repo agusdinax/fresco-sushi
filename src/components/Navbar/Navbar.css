@@ -5,7 +5,7 @@
   align-items: center;
   background-color: #111;
   color: white;
-  padding: 1rem 1rem;
+  padding: 0.8rem 0.8rem;
   position: sticky;
   z-index: 200;
   top: 0;
@@ -142,7 +142,7 @@
 .cart-sidebar .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 2rem;
   position: absolute;
   top: 10px;
   right: 15px;
