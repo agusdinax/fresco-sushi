@@ -11,15 +11,13 @@ export const ProductCard = ({
   onFinalize: () => void;
 }) => {
   const { cart, addToCart, removeFromCart } = useCart();
-
   const quantity = cart.filter((p) => p.id === product.id).length;
   const [showFinalize, setShowFinalize] = useState(false);
 
-  // Mostrar botón Finalizar con retraso cuando hay cantidad > 0
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (quantity > 0) {
-      timer = setTimeout(() => setShowFinalize(true), 1000); // 1 seg
+      timer = setTimeout(() => setShowFinalize(true), 1000);
     } else {
       setShowFinalize(false);
     }
@@ -51,11 +49,7 @@ export const ProductCard = ({
           </div>
 
           {showFinalize && (
-            <button
-              className="finalize-btn delayed"
-              onClick={onFinalize}
-              style={{ marginTop: "0.5rem" }}
-            >
+            <button className="finalize-btn delayed" onClick={onFinalize}>
               Finalizar compra
             </button>
           )}

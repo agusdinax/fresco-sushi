@@ -4,14 +4,18 @@ import { FiPlus, FiMinus } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import "./checkoutForm.css";
 
-export const CheckoutForm = () => {
+interface CheckoutFormProps {
+  isOpen: boolean;
+}
+
+export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
   const { cart, addToCart, removeFromCart } = useCart();
   const [type, setType] = useState("delivery");
   const [payment, setPayment] = useState("efectivo");
   const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
 
-  // Agrupar productos para mostrar cantidad
+  // Agrupar productos
   const grouped = cart.reduce((acc, item) => {
     acc[item.id] = acc[item.id]
       ? { ...acc[item.id], qty: acc[item.id].qty + 1 }
@@ -21,32 +25,34 @@ export const CheckoutForm = () => {
 
   const total = cart.reduce((sum, p) => sum + p.price, 0);
 
-  const handleSend = () => {
-    const items = Object.values(grouped)
-      .map(p => `- ${p.name} x${p.qty} ($${p.price * p.qty})`)
-      .join("\n");
+const handleSend = () => {
+  const items = Object.values(grouped)
+    .map(p => `- ${p.name} x${p.qty} ($${p.price * p.qty})`)
+    .join("\n");
 
-    // Construimos el mensaje con emojis y saltos de línea
-    let msg = `👋 Hola, quisiera hacer un pedido de sushi:\n\n` +
-      `🍣 *Pedido:*\n${items}\n\n` +
-      `💰 *Total:* $${total}\n` +
-      `🚚 *Tipo de entrega:* ${type === "delivery" ? "Delivery" : "Take Away"}\n` +
-      (type === "delivery" ? `🏠 *Dirección:* ${address}\n` : "") +
-      `💳 *Método de pago:* ${payment === "efectivo" ? "Efectivo" : "Transferencia"}`;
+  let msg =
+    `Hola, quisiera ${isOpen ? "hacer un pedido" : "programar un pedido"} de sushi:\n\n` +
+    `*Pedido:*\n${items}\n\n` +
+    `*Total:* $${total}\n` +
+    `*Tipo de entrega:* ${type === "delivery" ? "Delivery" : "Take Away"}\n` +
+    (type === "delivery" ? `*Dirección:* ${address}\n` : "") +
+    `*Método de pago:* ${payment === "efectivo" ? "Efectivo" : "Transferencia"}\n` +
+    `*Comentario:* ${comment || "Sin comentarios"}`;
 
-    if (comment.trim() !== "") {
-      msg += `\n📝 *Comentario:* ${comment}`;
-    }
+  const encodedMsg = encodeURIComponent(msg);
+  window.open(`https://wa.me/5492266631510?text=${encodedMsg}`, "_blank");
+};
 
-    // Codificamos el mensaje para URL
-    const encodedMsg = encodeURIComponent(msg);
-
-    window.open(`https://wa.me/5492494381315?text=${encodedMsg}`, "_blank");
-  };
 
   return (
     <div className="checkout-form">
       <h3>🛒 Mi pedido</h3>
+
+      {!isOpen && (
+        <div className="closed-warning" style={{ marginBottom: "1rem", color: "red" }}>
+          ⚠️ Nos encontramos cerrados. Podés <strong>programar tu pedido</strong>.
+        </div>
+      )}
 
       {cart.length === 0 ? (
         <p className="empty-cart">El carrito está vacío.</p>
@@ -78,7 +84,7 @@ export const CheckoutForm = () => {
         }}
       >
         <fieldset>
-          <legend>Tipo de entrega</legend>
+          <legend>Tipo de entrega:</legend>
           <label>
             <input
               type="radio"
@@ -107,12 +113,12 @@ export const CheckoutForm = () => {
             placeholder="Dirección"
             value={address}
             onChange={e => setAddress(e.target.value)}
-            required
+            required={type === "delivery"}
           />
         )}
 
         <fieldset>
-          <legend>Método de pago</legend>
+          <legend>Método de pago:</legend>
           <label>
             <input
               type="radio"
@@ -135,15 +141,18 @@ export const CheckoutForm = () => {
           </label>
         </fieldset>
 
+        <fieldset>
+          <legend>Agregar un comentario:</legend>
         <textarea
           placeholder="Comentario"
           value={comment}
           onChange={e => setComment(e.target.value)}
         />
-
+        </fieldset>
+        
         <button type="submit" disabled={cart.length === 0}>
           <FaWhatsapp className="whatsapp-icon1" />
-          Enviar pedido por WhatsApp
+          {isOpen ? "Enviar pedido por WhatsApp" : "Programar pedido"}
         </button>
       </form>
     </div>

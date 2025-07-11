@@ -6,7 +6,7 @@ import EventoCard from "./components/EventoCard/EventoCard";
 import { Menu } from "./components/Menu/Menu";
 import { CartProvider } from "./components/Menu/CartContext";
 import { CheckoutForm } from "./components/Menu/CheckoutForm";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GalleryCarousel } from "./components/GalleryCarousel/GalleryCarousel";
 import { ContactForm } from "./components/ContactForm/ContactForm";
 import { Footer } from "./components/Footer/Footer";
@@ -21,20 +21,63 @@ const images = [
 
 export const App = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const toggleCheckout = () => {
     setCheckoutOpen(prev => !prev);
   };
+
+  useEffect(() => {
+      type Day = "miércoles" | "jueves" | "viernes" | "sábado" | "domingo";
+
+      const SCHEDULE: Record<Day, [string, string][]> = {
+        miércoles: [["19:00", "00:00"]],
+        jueves: [["19:00", "00:00"]],
+        viernes: [["19:00", "00:00"]],
+        sábado: [["19:00", "00:00"]],
+        domingo: [["19:00", "00:00"]],
+      };
+
+      const hhmmToDate = (base: Date, hhmm: string) => {
+        const [h, m] = hhmm.split(":").map(Number);
+        const d = new Date(base);
+        d.setHours(h, m, 0, 0);
+        return d;
+      };
+
+      const nowBetween = ([start, end]: [string, string], now: Date) => {
+        const ini = hhmmToDate(now, start);
+        const fin = hhmmToDate(now, end);
+        if (fin < ini) fin.setDate(fin.getDate() + 1);
+        return now >= ini && now <= fin;
+      };
+
+      const checkOpen = () => {
+        const now = new Date();
+        const today = now.toLocaleDateString("es-AR", { weekday: "long" }) as Day;
+        const daySchedule = SCHEDULE[today];
+        if (!daySchedule) {
+          setIsOpen(false);
+          return;
+        }
+        const openNow = daySchedule.some((range: [string, string]) => nowBetween(range, now));
+        setIsOpen(openNow);
+      };
+
+      checkOpen();
+      const interval = setInterval(checkOpen, 60000);
+      return () => clearInterval(interval);
+    }, []);
 
  return (
     <CartProvider>
       <div className="app-container header" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <Navbar onToggleCheckout={toggleCheckout} isCheckoutOpen={checkoutOpen} />
         <HeaderGallery />
-        <HorariosFresco />
+        <HorariosFresco isOpen={isOpen} />
         <main style={{ flex: 1 }}>
           <div id="menu">
-            <Menu />
+            <Menu onFinalizePurchase={toggleCheckout} checkoutOpen={checkoutOpen} />
           </div>
 
           <SushimanCard
@@ -54,9 +97,9 @@ export const App = () => {
         <Footer/>
         {/* Sidebar del carrito */}
         <div className={`cart-sidebar ${checkoutOpen ? "open" : ""}`}>
-          <button className="close-btn" onClick={toggleCheckout}>×</button>
-          <CheckoutForm />
-        </div>
+            <button className="close-btn" onClick={toggleCheckout}>×</button>
+            <CheckoutForm isOpen={isOpen} />
+          </div>
       </div>
     </CartProvider>
   );
