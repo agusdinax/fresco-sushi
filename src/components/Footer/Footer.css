@@ -23,13 +23,13 @@
 }
 
 .footer-logo {
-  height: 45px;
+  height: 40px;
   object-fit: fill;
   padding-left: 3rem;
 }
 
 .footer-icon {
-  font-size: 2rem;
+  font-size: 30px;
   color: var(--color-primary);
   transition: transform 0.2s ease;
 }
@@ -58,6 +58,7 @@
   }
 
   .footer-logo {
-    height: 50px;
+    height: 40px;
+    padding-right: 3rem;
   }
 }

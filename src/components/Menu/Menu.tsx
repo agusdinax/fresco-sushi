@@ -12,6 +12,7 @@ export const Menu = () => {
   return (
     <div className="menu-container">
       <h2 className="h2menu">🍣MENÚ</h2>
+
       <CategorySelector
         categories={categories}
         selected={selectedCategory}
@@ -25,12 +26,23 @@ export const Menu = () => {
             <ProductCard
               key={product.id}
               product={product}
-              onFinalize={() => setShowCheckout(true)}
+              onFinalize={() => {
+                if (!showCheckout) {
+                  setShowCheckout(true);
+
+                  // Scroll al checkout después de abrirlo (opcional)
+                  setTimeout(() => {
+                    document
+                      .querySelector(".checkout-slider")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }, 150);
+                }
+              }}
             />
           ))}
       </div>
 
-      {/* Slider del formulario */}
+      {/* Slider del formulario de checkout */}
       <div className={`checkout-slider ${showCheckout ? "open" : ""}`}>
         <button className="close-btn" onClick={() => setShowCheckout(false)}>
           ×
