@@ -15,7 +15,7 @@ export const Footer = () => {
           <FaInstagram className="footer-icon" />
         </a>
         <a
-          href="https://wa.me/5491123456789"
+          href="https://wa.me/5492266631510"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="WhatsApp"

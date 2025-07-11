@@ -52,7 +52,7 @@ export const Navbar = ({ onToggleCheckout, isCheckoutOpen }: NavbarProps) => {
       </nav>
 
       <a
-        href="https://wa.me/549XXXXXXXXXX?text=¡Hola!%20Quiero%20hacer%20un%20pedido."
+        href="https://wa.me/5492266631510?text=¡Hola!%20Quiero%20hacer%20un%20pedido."
         className="whatsapp-button"
         target="_blank"
         rel="noopener noreferrer"

@@ -40,7 +40,7 @@ const handleSend = () => {
     `*Comentario:* ${comment || "Sin comentarios"}`;
 
   const encodedMsg = encodeURIComponent(msg);
-  window.open(`https://wa.me/5492494381315?text=${encodedMsg}`, "_blank");
+  window.open(`https://wa.me/5492266631510?text=${encodedMsg}`, "_blank");
 };
 
 
