@@ -11,6 +11,9 @@ const PedidoSchema = new mongoose.Schema({
     }
   ],
   total: { type: Number, required: true },
+  metodoPago: { type: String, required: true },
+  tipoEntrega: { type: String, required: true },
+  address: { type: String},
   estado: {
     type: String,
     enum: ['pendiente', 'en preparación', 'en reparto', 'entregado'],

@@ -53,7 +53,15 @@ router.patch('/:id/estado', protect, restrictTo('dueño'), async (req, res) => {
 // POST /api/pedidos/publico — sin autenticación
 router.post('/publico', async (req, res) => {
   try {
-    const { nombreCliente, telefono, productos, total } = req.body;
+    const {
+      nombreCliente,
+      telefono,
+      productos,
+      total,
+      tipoEntrega,
+      metodoPago,
+      address
+    } = req.body;
 
     if (!nombreCliente || !productos || productos.length === 0 || !total) {
       return res.status(400).json({ message: 'Datos incompletos' });
@@ -63,7 +71,10 @@ router.post('/publico', async (req, res) => {
       nombreCliente,
       telefono,
       productos,
-      total
+      total,
+      tipoEntrega,
+      metodoPago,
+      address
     });
 
     await nuevoPedido.save();

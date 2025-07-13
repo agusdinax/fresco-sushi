@@ -50,11 +50,14 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
       telefono,
       productos: Object.values(grouped).map(p => ({
         id: p.id,
-        name: p.name,
-        qty: p.qty,
-        price: p.price,
+        producto: p.name,
+        cantidad: p.qty,
+        precio: p.price,
       })),
       total,
+      metodoPago: payment,
+      tipoEntrega: type,
+      address
     };
 
     try {
