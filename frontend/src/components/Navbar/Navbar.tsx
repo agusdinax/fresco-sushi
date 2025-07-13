@@ -4,6 +4,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import logo from "../../assets/FRESCO.png";
 import "./Navbar.css";
 import { useCart } from "../Menu/CartContext";
+const NUM_WHATSAPP = import.meta.env.VITE_WHATSAPP;
 
 interface NavbarProps {
   onToggleCheckout: () => void;
@@ -14,8 +15,10 @@ export const Navbar = ({ onToggleCheckout, isCheckoutOpen }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { cart } = useCart();
   const cartCount = cart.length;
-
   const toggleMenu = () => setMenuOpen(!menuOpen);
+
+  const mensaje = "¡Hola! Quiero hacer un pedido.";
+  const linkWhatsapp = `https://wa.me/${NUM_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
 
   return (
     <>
@@ -52,7 +55,7 @@ export const Navbar = ({ onToggleCheckout, isCheckoutOpen }: NavbarProps) => {
       </nav>
 
       <a
-        href="https://wa.me/5492266631510?text=¡Hola!%20Quiero%20hacer%20un%20pedido."
+        href={linkWhatsapp}
         className="whatsapp-button"
         target="_blank"
         rel="noopener noreferrer"

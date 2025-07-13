@@ -1,8 +1,12 @@
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import "./Footer.css";
 import logo from "../../assets/FRESCO.png"; // Asegurate de tener el logo en esa ruta
+const NUM_WHATSAPP = import.meta.env.VITE_WHATSAPP;
 
 export const Footer = () => {
+  const mensaje = "¡Hola! Quiero hacer un pedido.";
+  const linkWhatsapp = `https://wa.me/${NUM_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
+
   return (
     <footer className="footer">
       <div className="footer-left">
@@ -15,7 +19,7 @@ export const Footer = () => {
           <FaInstagram className="footer-icon" />
         </a>
         <a
-          href="https://wa.me/5492266631510"
+          href={linkWhatsapp}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="WhatsApp"

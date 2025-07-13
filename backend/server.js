@@ -7,6 +7,8 @@ const swaggerUi = require('swagger-ui-express');
 const authRoutes = require('./routes/auth');
 const productosRoutes = require('./routes/productos');
 const pedidosRoutes = require('./routes/pedidos');
+import dotenv from 'dotenv';
+dotenv.config();
 
 const swaggerOptions = {
   swaggerDefinition: {
@@ -18,7 +20,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
+        url: process.env.BASE_URL,
         description: 'Servidor local'
       }
     ]
