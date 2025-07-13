@@ -1,0 +1,96 @@
+.panel-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background-color: #222;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar-logo {
+  width: 80px;
+  margin-bottom: 1rem;
+}
+
+.sidebar-user {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.sidebar-nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0.5rem 0;
+  display: block;
+}
+
+.logout-btn {
+  margin-top: auto;
+  background: crimson;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.panel-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.dashboard-cards {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: #f2f2f2;
+  padding: 1rem;
+  border-radius: 10px;
+  min-width: 150px;
+  text-align: center;
+}
+
+.lista-pedidos {
+  list-style: none;
+  padding: 0;
+}
+
+.pedido-item {
+  background: #fff;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .panel-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .panel-content {
+    padding: 1rem;
+  }
+}
