@@ -1,7 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; 
 import { AuthLogin } from "./components/Login/AuthLogin";
 import { AuthRegister } from "./components/Login/AuthRegister";
-import { PanelLayout } from "./components/Panel/PanelLayout";
+import PanelLayout from "./components/Panel/PanelLayout";
 import { Dashboard } from "./components/Panel/Dashboard";
 import { ListaPedidos } from "./components/Panel/ListaPedidos";
 import { PrivateRoute } from "./components/Panel/PrivateRoute";
@@ -13,7 +13,6 @@ export default function App() {
         <Route path="/login" element={<AuthLogin />} />
         <Route path="/register" element={<AuthRegister />} />
 
-        {/* Proteger el acceso al panel */}
         <Route
           path="/panel"
           element={

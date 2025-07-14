@@ -87,12 +87,61 @@ router.post('/publico', async (req, res) => {
 
 
 module.exports = router;
-
 /**
  * @swagger
  * tags:
  *   name: Pedidos
  *   description: Gestión de pedidos
+ */
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
+ *   schemas:
+ *     ProductoPedido:
+ *       type: object
+ *       required:
+ *         - producto
+ *         - cantidad
+ *         - precio
+ *       properties:
+ *         producto:
+ *           type: string
+ *           description: ID del producto
+ *         cantidad:
+ *           type: number
+ *         precio:
+ *           type: number
+ *
+ *     Pedido:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         nombreCliente:
+ *           type: string
+ *         telefono:
+ *           type: string
+ *         productos:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/ProductoPedido'
+ *         total:
+ *           type: number
+ *         estado:
+ *           type: string
+ *           enum: [pendiente, en preparación, en reparto, entregado]
+ *         fechaPedido:
+ *           type: string
+ *           format: date-time
+ *         usuario:
+ *           type: string
  */
 
 /**
@@ -119,21 +168,15 @@ module.exports = router;
  *               productos:
  *                 type: array
  *                 items:
- *                   type: object
- *                   required:
- *                     - producto
- *                     - cantidad
- *                     - precio
- *                   properties:
- *                     producto:
- *                       type: string
- *                       description: ID del producto
- *                     cantidad:
- *                       type: number
- *                     precio:
- *                       type: number
+ *                   $ref: '#/components/schemas/ProductoPedido'
  *               total:
  *                 type: number
+ *               tipoEntrega:
+ *                 type: string
+ *               metodoPago:
+ *                 type: string
+ *               address:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Pedido creado exitosamente
@@ -154,35 +197,100 @@ module.exports = router;
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Pedido:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         nombreCliente:
- *           type: string
- *         telefono:
- *           type: string
- *         productos:
- *           type: array
- *           items:
+ * /api/pedidos:
+ *   post:
+ *     summary: Crear un pedido autenticado
+ *     tags: [Pedidos]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
  *             type: object
+ *             required:
+ *               - productos
+ *               - total
  *             properties:
- *               producto:
+ *               productos:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/ProductoPedido'
+ *               total:
+ *                 type: number
+ *               tipoEntrega:
  *                 type: string
- *                 description: ID del producto
- *               cantidad:
- *                 type: number
- *               precio:
- *                 type: number
- *         total:
- *           type: number
- *         estado:
+ *               metodoPago:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Pedido creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pedido'
+ *       500:
+ *         description: Error creando pedido
+ */
+
+/**
+ * @swagger
+ * /api/pedidos:
+ *   get:
+ *     summary: Obtener pedidos (según rol)
+ *     tags: [Pedidos]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de pedidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pedido'
+ *       500:
+ *         description: Error al obtener pedidos
+ */
+
+/**
+ * @swagger
+ * /api/pedidos/{id}/estado:
+ *   patch:
+ *     summary: Actualizar el estado de un pedido (solo dueño)
+ *     tags: [Pedidos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
  *           type: string
- *           enum: [pendiente, en preparación, en reparto, entregado]
- *         fechaPedido:
- *           type: string
- *           format: date-time
+ *         required: true
+ *         description: ID del pedido
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - estado
+ *             properties:
+ *               estado:
+ *                 type: string
+ *                 enum: [pendiente, en preparación, en reparto, entregado]
+ *     responses:
+ *       200:
+ *         description: Estado actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pedido'
+ *       404:
+ *         description: Pedido no encontrado
+ *       500:
+ *         description: Error actualizando estado
  */
