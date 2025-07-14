@@ -1,13 +1,13 @@
-import dotenv from 'dotenv';
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import swaggerJsDoc from 'swagger-jsdoc';
-import swaggerUi from 'swagger-ui-express';
+const dotenv = require('dotenv');
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
-import authRoutes from './routes/auth.js';
-import productosRoutes from './routes/productos.js';
-import pedidosRoutes from './routes/pedidos.js';
+const authRoutes = require('./routes/auth');
+const productosRoutes = require('./routes/productos');
+const pedidosRoutes = require('./routes/pedidos');
 
 dotenv.config();
 

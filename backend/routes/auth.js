@@ -25,16 +25,34 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const usuario = await Usuario.findOne({ email });
-    if (!usuario) return res.status(400).json({ message: 'Email o contraseña incorrectos' });
+    if (!usuario) {
+      return res.status(400).json({ message: 'Email o contraseña incorrectos' });
+    }
 
     const isMatch = await usuario.matchPassword(password);
-    if (!isMatch) return res.status(400).json({ message: 'Email o contraseña incorrectos' });
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Email o contraseña incorrectos' });
+    }
 
-    const token = jwt.sign({ id: usuario._id, rol: usuario.rol }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token });
+    const token = jwt.sign(
+      { id: usuario._id, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    // ✅ Asegurate de devolver también el rol
+    res.json({
+      token,
+      rol: usuario.rol,
+      nombre: usuario.nombre, // opcional: podés usarlo en Sidebar
+      id: usuario._id, // si lo necesitás para frontend
+    });
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Error en login' });
   }
 });
@@ -75,7 +93,7 @@ module.exports = router;
  *                 type: string
  *               rol:
  *                 type: string
- *                 enum: [dueño, delivery]
+ *                 enum: [owner, delivery]
  *     responses:
  *       200:
  *         description: Usuario registrado exitosamente con token JWT

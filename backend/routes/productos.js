@@ -3,8 +3,8 @@ const router = express.Router();
 const Producto = require('../models/Producto');
 const { protect, restrictTo } = require('../middleware/auth');
 
-// ✅ Crear producto (solo "dueño")
-router.post('/', protect, restrictTo('dueño'), async (req, res) => {
+// ✅ Crear producto (solo "owner")
+router.post('/', protect, restrictTo('owner'), async (req, res) => {
   try {
     const { category, name, description, price, image, disponible } = req.body;
 
@@ -74,7 +74,7 @@ module.exports = router;
  *         description: Error al obtener productos
  *
  *   post:
- *     summary: Crear un nuevo producto (requiere rol dueño)
+ *     summary: Crear un nuevo producto (requiere rol owner)
  *     tags: [Productos]
  *     security:
  *       - bearerAuth: []

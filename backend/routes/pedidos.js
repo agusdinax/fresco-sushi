@@ -21,21 +21,24 @@ router.post('/', protect, async (req, res) => {
 router.get('/', protect, async (req, res) => {
   try {
     let pedidos;
-    if (req.usuario.rol === 'dueño') {
-      pedidos = await Pedido.find().populate('usuario productos.producto');
+
+    if (req.usuario.rol === 'owner') {
+      pedidos = await Pedido.find();
     } else if (req.usuario.rol === 'delivery') {
-      pedidos = await Pedido.find({ estado: 'en reparto' }).populate('usuario productos.producto');
+      pedidos = await Pedido.find({ estado: 'en reparto' }); 
     } else {
       pedidos = [];
     }
+
     res.json(pedidos);
   } catch (error) {
+    console.error("Error al obtener pedidos:", error);
     res.status(500).json({ message: 'Error al obtener pedidos' });
   }
 });
 
-// Actualizar estado del pedido (solo dueño)
-router.patch('/:id/estado', protect, restrictTo('dueño'), async (req, res) => {
+// Actualizar estado del pedido (solo owner)
+router.patch('/:id/estado', protect, restrictTo('owner'), async (req, res) => {
   try {
     const { estado } = req.body;
     const pedido = await Pedido.findById(req.params.id);
@@ -259,7 +262,7 @@ module.exports = router;
  * @swagger
  * /api/pedidos/{id}/estado:
  *   patch:
- *     summary: Actualizar el estado de un pedido (solo dueño)
+ *     summary: Actualizar el estado de un pedido (solo owner)
  *     tags: [Pedidos]
  *     security:
  *       - bearerAuth: []

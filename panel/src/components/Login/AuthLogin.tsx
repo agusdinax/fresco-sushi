@@ -63,7 +63,7 @@ export const AuthLogin = () => {
         setSnackbarOpen(true);
         return;
       }
-
+      console.log("Rol del usuario logueado:", data.rol);
       localStorage.setItem("token", data.token);
       localStorage.setItem("rol", data.rol);
 
@@ -72,7 +72,7 @@ export const AuthLogin = () => {
       setSnackbarOpen(true);
 
       setTimeout(() => {
-        if (data.rol === "dueño") {
+        if (data.rol === "owner") {
           navigate("/panel/dashboard");
         } else if (data.rol === "delivery") {
           navigate("/panel/pedidos");

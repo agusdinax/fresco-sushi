@@ -7,11 +7,14 @@ const PanelLayout = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const rol = localStorage.getItem("rol");
-    if (!rol) navigate("/login");
-    else setUser(rol);
-  }, []);
+useEffect(() => {
+  const rol = localStorage.getItem("rol");
+  if (!rol) {
+    navigate("/login");
+  } else {
+    setUser({ rol }); // pasamos un objeto con el rol
+  }
+}, []);
 
   return (
     <div className="panel-layout">
