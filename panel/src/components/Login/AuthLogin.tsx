@@ -63,15 +63,18 @@ export const AuthLogin = () => {
         setSnackbarOpen(true);
         return;
       }
-      console.log("Rol del usuario logueado:", data.rol);
-      localStorage.setItem("token", data.token);
       localStorage.setItem("rol", data.rol);
-
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify({
+        nombre: data.nombre,
+        id: data.id 
+      }));
+      console.log("Login exitoso:", data);
       setSnackbarType("success");
       setSnackbarMsg("Inicio de sesión exitoso.");
       setSnackbarOpen(true);
 
-      setTimeout(() => {
+        setTimeout(() => {
         if (data.rol === "owner") {
           navigate("/panel/dashboard");
         } else if (data.rol === "delivery") {

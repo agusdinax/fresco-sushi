@@ -26,11 +26,12 @@ export const Dashboard = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [rol, setRol] = useState<string | null>(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const rolGuardado = localStorage.getItem("rol");
-    setRol(rolGuardado);
-
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  const rolGuardado = localStorage.getItem("rol");
+  console.log("rolGuardado desde localStorage:", rolGuardado);
+  setRol(rolGuardado);
+  
     const obtenerPedidos = () => {
       fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
         headers: { Authorization: `Bearer ${token}` },
