@@ -13,6 +13,7 @@ interface Pedido {
   metodoPago: string;
   tipoEntrega: string;
   address?: string;
+  comentario?: string;
   estado: string;
   fechaPedido: string;
 }
@@ -25,13 +26,13 @@ export const Dashboard = () => {
   });
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [rol, setRol] = useState<string | null>(null);
+  const [mensaje, setMensaje] = useState<string | null>(null);
 
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  const rolGuardado = localStorage.getItem("rol");
-  console.log("rolGuardado desde localStorage:", rolGuardado);
-  setRol(rolGuardado);
-  
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const rolGuardado = localStorage.getItem("rol");
+    setRol(rolGuardado);
+
     const obtenerPedidos = () => {
       fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -48,11 +49,13 @@ useEffect(() => {
           const mesActual = hoy.getMonth();
           const añoActual = hoy.getFullYear();
 
+          // Pedidos del día
           const pedidosDelDia = data.filter((p: Pedido) => {
             const fecha = new Date(p.fechaPedido);
             return fecha.toDateString() === hoyStr;
           });
 
+          // Pedidos del mes (todos)
           const pedidosMes = data.filter((p: Pedido) => {
             const fecha = new Date(p.fechaPedido);
             return (
@@ -62,8 +65,12 @@ useEffect(() => {
           });
 
           let visibles = pedidosDelDia;
+
           if (rolGuardado === "delivery") {
-            visibles = visibles.filter((p) => p.estado === "en reparto");
+            // Filtrar solo pedidos del día con tipoEntrega "takeaway"
+            visibles = visibles.filter(
+              (p) => p.tipoEntrega.toLowerCase() === "takeaway"
+            );
           }
 
           visibles.sort(
@@ -72,13 +79,32 @@ useEffect(() => {
               new Date(a.fechaPedido).getTime()
           );
 
-          const pendientes = visibles.filter((p) => p.estado === "pendiente");
+          if (rolGuardado === "delivery") {
+            // Pendientes de entrega: estado "en reparto" dentro de los visibles
+            const pendientesEntrega = visibles.filter(
+              (p) => p.estado === "en reparto"
+            ).length;
 
-          setResumen({
-            totalMes: pedidosMes.length,
-            pendientes: pendientes.length,
-            dia: visibles.length,
-          });
+            // Total de pedidos con entrega takeaway del día
+            const totalHoyTakeaway = pedidosDelDia.filter(
+              (p) => p.tipoEntrega.toLowerCase() === "takeaway"
+            ).length;
+
+            setResumen({
+              totalMes: 0,
+              pendientes: pendientesEntrega,
+              dia: totalHoyTakeaway,
+            });
+          } else {
+            // Para otros roles: pendientes por estado pendiente
+            const pendientes = visibles.filter((p) => p.estado === "pendiente");
+
+            setResumen({
+              totalMes: pedidosMes.length,
+              pendientes: pendientes.length,
+              dia: visibles.length,
+            });
+          }
 
           setPedidos(visibles);
         })
@@ -87,15 +113,13 @@ useEffect(() => {
         });
     };
 
-    obtenerPedidos(); // llamada inicial
-    const intervalo = setInterval(obtenerPedidos, 5000); // cada 5 seg.
-
-    return () => clearInterval(intervalo); // limpieza
+    obtenerPedidos();
+    const intervalo = setInterval(obtenerPedidos, 5000);
+    return () => clearInterval(intervalo);
   }, []);
 
   const actualizarEstado = async (id: string, nuevoEstado: string) => {
     const token = localStorage.getItem("token");
-
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/api/pedidos/${id}/estado`,
@@ -116,23 +140,44 @@ useEffect(() => {
             p._id === id ? { ...p, estado: actualizado.estado } : p
           )
         );
+        setMensaje("✅ Estado actualizado correctamente.");
+        setTimeout(() => setMensaje(null), 3000);
       } else {
-        console.error("Error actualizando estado del pedido");
+        setMensaje("❌ Error al actualizar estado.");
       }
     } catch (err) {
       console.error("Error en fetch PATCH:", err);
+      setMensaje("❌ Error al actualizar estado.");
     }
   };
+
+  const formatoPesos = (monto: number) =>
+    monto.toLocaleString("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      minimumFractionDigits: 2,
+    });
 
   return (
     <div className="panel-content">
       <h2>📊 Dashboard</h2>
 
       <div className="dashboard-cards">
-        <div className="card">📅 Pedidos del día: {resumen.dia}</div>
-        <div className="card">⏳ Pendientes: {resumen.pendientes}</div>
-        <div className="card">📈 Total del mes: {resumen.totalMes}</div>
+        {rol === "delivery" ? (
+          <>
+            <div className="card">📦 Pendientes de entrega: {resumen.pendientes}</div>
+            <div className="card">📅 Total del día con entrega: {resumen.dia}</div>
+          </>
+        ) : (
+          <>
+            <div className="card">⏳ Pendientes: {resumen.pendientes}</div>
+            <div className="card">📅 Pedidos del día: {resumen.dia}</div>
+            <div className="card">📈 Total del mes: {resumen.totalMes}</div>
+          </>
+        )}
       </div>
+
+      {mensaje && <div className="mensaje-confirmacion">{mensaje}</div>}
 
       <h3 style={{ marginTop: "2rem" }}>📦 Listado de Pedidos</h3>
       <div className="tabla-scroll">
@@ -146,6 +191,7 @@ useEffect(() => {
               <th>Método Pago</th>
               <th>Entrega</th>
               <th>Dirección</th>
+              <th>Comentario</th>
               <th>Estado</th>
               <th>Fecha</th>
               {rol === "owner" && <th>Actualizar</th>}
@@ -166,10 +212,11 @@ useEffect(() => {
                     </div>
                   ))}
                 </td>
-                <td>${pedido.total.toFixed(2)}</td>
+                <td>{formatoPesos(pedido.total)}</td>
                 <td>{pedido.metodoPago}</td>
                 <td>{pedido.tipoEntrega}</td>
                 <td>{pedido.address || "-"}</td>
+                <td>{pedido.comentario || "-"}</td>
                 <td>{pedido.estado}</td>
                 <td>{new Date(pedido.fechaPedido).toLocaleString()}</td>
                 {rol === "owner" && (

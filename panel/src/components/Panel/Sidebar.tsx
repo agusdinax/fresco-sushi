@@ -27,17 +27,22 @@ const Sidebar = () => {
       </div>
 
       <div className={`sidebar-content ${open ? "show" : ""}`}>
-        <p className="sidebar-user">👤 {user?.nombre || "Usuario"}</p>
+        <p className="sidebar-user">🙎‍♂️ {user?.nombre || "Usuario"}</p>
 
         <nav className="sidebar-nav">
           <Link to="/panel/dashboard" onClick={() => setOpen(false)}>📊 Dashboard</Link>
           {rol?.toLowerCase() === "owner" && (
             <>
-              <Link to="/panel/crear-producto" onClick={() => setOpen(false)}>➕ Crear Producto</Link>
+              <Link to="/panel/crear-producto" onClick={() => setOpen(false)}>➕ Menú</Link>
+              <Link to="/panel/pedidos" onClick={() => setOpen(false)}>📦 Historial Pedidos</Link>
               <Link to="/panel/reportes" onClick={() => setOpen(false)}>📈 Reportes</Link>
             </>
           )}
-          <Link to="/panel/pedidos" onClick={() => setOpen(false)}>📦 Pedidos</Link>
+          {rol?.toLowerCase() === "delivery" && (
+            <>
+            <Link to="/panel/pedidos" onClick={() => setOpen(false)}>📦 Pedidos</Link>
+            </>
+          )}
         </nav>
 
         <div className="sidebar-bottom">

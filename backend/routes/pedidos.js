@@ -63,7 +63,8 @@ router.post('/publico', async (req, res) => {
       total,
       tipoEntrega,
       metodoPago,
-      address
+      address, 
+      comentario
     } = req.body;
 
     if (!nombreCliente || !productos || productos.length === 0 || !total) {
@@ -77,7 +78,8 @@ router.post('/publico', async (req, res) => {
       total,
       tipoEntrega,
       metodoPago,
-      address
+      address, 
+      comentario
     });
 
     await nuevoPedido.save();

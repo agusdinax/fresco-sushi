@@ -78,7 +78,7 @@ export const AuthLogin = () => {
         if (data.rol === "owner") {
           navigate("/panel/dashboard");
         } else if (data.rol === "delivery") {
-          navigate("/panel/pedidos");
+          navigate("/panel/dashboard");
         } else {
           navigate("/");
         }

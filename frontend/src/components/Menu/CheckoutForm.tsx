@@ -55,9 +55,10 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         precio: p.price,
       })),
       total,
+      comentario: comment,
       metodoPago: payment,
       tipoEntrega: type,
-      address
+      address,    
     };
 
     try {
