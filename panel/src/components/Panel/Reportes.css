@@ -1,0 +1,23 @@
+.reporte-panel {
+  max-width: 600px;
+  margin: auto;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.reporte-panel h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.reporte-panel ul {
+  list-style: none;
+  padding: 0;
+}
+
+.reporte-panel li {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}

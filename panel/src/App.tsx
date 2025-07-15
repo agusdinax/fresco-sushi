@@ -5,6 +5,7 @@ import PanelLayout from "./components/Panel/PanelLayout";
 import { Dashboard } from "./components/Panel/Dashboard";
 import { ListaPedidos } from "./components/Panel/ListaPedidos";
 import { PrivateRoute } from "./components/Panel/PrivateRoute";
+import  Reportes  from "./components/Panel/Reportes";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         >
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="pedidos" element={<ListaPedidos />} />
+          <Route path="reportes" element={<Reportes />} />
         </Route>
 
         <Route path="*" element={<AuthLogin />} />

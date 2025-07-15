@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./panel.css";
 
 interface Pedido {
   _id: string;
@@ -167,7 +168,7 @@ export const Dashboard = () => {
       <div className="pedidos-cards">
         {pedidos.map((pedido) => (
           <div className="pedido-card" key={pedido._id} data-estado={pedido.estado}>
-            <h4>{pedido.nombreCliente}</h4>
+            <p><strong>Cliente: </strong>{pedido.nombreCliente}</p>
             <p>
               <strong>Teléfono:</strong> {pedido.telefono}
             </p>
@@ -212,6 +213,7 @@ export const Dashboard = () => {
                 <option value="en preparación">En preparación</option>
                 <option value="en reparto">En reparto</option>
                 <option value="entregado">Entregado</option>
+                <option value="entregado">Cancelado</option>
               </select>
             )}
           </div>
