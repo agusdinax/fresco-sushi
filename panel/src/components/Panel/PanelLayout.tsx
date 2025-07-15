@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import "./panel.css";
 
 const PanelLayout = () => {
-  const [user, setUser] = useState<any>(null);
+  interface User {
+    rol: string;
+  }
+
+  const [rol, setRol] = useState<User | null>(null);
   const navigate = useNavigate();
 
 useEffect(() => {
@@ -12,13 +16,13 @@ useEffect(() => {
   if (!rol) {
     navigate("/login");
   } else {
-    setUser({ rol }); // pasamos un objeto con el rol
+    setRol({ rol }); // pasamos un objeto con el rol
   }
 }, []);
 
   return (
     <div className="panel-layout">
-      <Sidebar user={user} />
+      <Sidebar />
       <main className="panel-content">
         {/* RENDERIZA AQUÍ LAS RUTAS HIJAS */}
         <Outlet />
