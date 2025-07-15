@@ -25,7 +25,7 @@ interface Pedido {
   telefono: string;
   productos: Producto[];
   total: number;
-  estado: "pendiente" | "en preparación" | "en reparto" | "entregado";
+  estado: "pendiente" | "en preparaci\u00f3n" | "en reparto" | "entregado";
   fechaPedido: string;
   usuario: string;
   metodoPago: string;
@@ -34,17 +34,12 @@ interface Pedido {
   comentario?: string;
 }
 
-const METODOS_PAGO = ["", "Efectivo", "Tarjeta", "Mercado Pago"];
-const TIPOS_ENTREGA = ["", "Delivery", "Para llevar", "En local"];
+const METODOS_PAGO = ["", "efectivo", "transferencia"];
+const TIPOS_ENTREGA = ["", "delivery", "takeaway"];
 
 export const ListaPedidos = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [filtros, setFiltros] = useState<{
-    usuario: string;
-    metodoPago: string;
-    tipoEntrega: string;
-    fechas: Range;
-  }>({
+  const [filtros, setFiltros] = useState({
     usuario: "",
     metodoPago: "",
     tipoEntrega: "",
@@ -52,23 +47,28 @@ export const ListaPedidos = () => {
       startDate: undefined,
       endDate: undefined,
       key: "selection",
-    },
+    } as Range,
   });
+  const [estado, setEstado] = useState("");
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
   const [paginaActual, setPaginaActual] = useState(1);
   const pedidosPorPagina = 20;
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const fetchPedidos = () => {
+      const token = localStorage.getItem("token");
+      fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setPedidos(data))
+        .catch((err) => console.error("Error:", err));
+    };
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setPedidos(data))
-      .catch((err) => console.error("Error:", err));
+    fetchPedidos();
+    const interval = setInterval(fetchPedidos, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const pedidosFiltrados = pedidos.filter((pedido) => {
@@ -80,12 +80,12 @@ export const ListaPedidos = () => {
     }
     if (
       filtros.usuario.trim() &&
-      !pedido.usuario.toLowerCase().includes(filtros.usuario.toLowerCase().trim())
+      !pedido.nombreCliente.toLowerCase().includes(filtros.usuario.toLowerCase().trim())
     )
       return false;
     if (filtros.metodoPago && pedido.metodoPago !== filtros.metodoPago) return false;
     if (filtros.tipoEntrega && pedido.tipoEntrega !== filtros.tipoEntrega) return false;
-
+    if (estado && pedido.estado !== estado) return false;
     return true;
   });
 
@@ -96,20 +96,26 @@ export const ListaPedidos = () => {
   const pedidosPaginados = pedidosFiltrados.slice(indexPrimero, indexUltimo);
   const totalPaginas = Math.ceil(pedidosFiltrados.length / pedidosPorPagina);
 
-  const quitarFiltro = (tipo: "usuario" | "metodoPago" | "tipoEntrega" | "fechas") => {
+  const quitarFiltro = (tipo: keyof typeof filtros | "estado") => {
     if (tipo === "fechas") {
       setFiltros((f) => ({
         ...f,
         fechas: { startDate: undefined, endDate: undefined, key: "selection" },
       }));
+    } else if (tipo === "estado") {
+      setEstado("");
     } else {
       setFiltros((f) => ({ ...f, [tipo]: "" }));
     }
     setPaginaActual(1);
   };
 
-  const formatearFecha = (fecha: string) =>
-    dayjs(fecha).format("dddd DD [de] MMMM [de] YYYY");
+  const pedidosPorDia = pedidosPaginados.reduce((acc, pedido) => {
+    const dia = dayjs(pedido.fechaPedido).format("dddd DD [de] MMMM");
+    if (!acc[dia]) acc[dia] = [];
+    acc[dia].push(pedido);
+    return acc;
+  }, {} as Record<string, Pedido[]>);
 
   return (
     <div className="contenedor-lista">
@@ -118,7 +124,7 @@ export const ListaPedidos = () => {
       <div className="filtros">
         <input
           type="text"
-          placeholder="Buscar por delivery"
+          placeholder="Buscar por cliente"
           value={filtros.usuario}
           onChange={(e) => {
             setPaginaActual(1);
@@ -154,10 +160,23 @@ export const ListaPedidos = () => {
           ))}
         </select>
 
+        <select
+          value={estado}
+          onChange={(e) => {
+            setPaginaActual(1);
+            setEstado(e.target.value);
+          }}
+        >
+          <option value="">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="en preparación">En preparación</option>
+          <option value="en reparto">En reparto</option>
+          <option value="entregado">Entregado</option>
+        </select>
+
         <button
           className="btn-fechas"
           onClick={() => setMostrarCalendario(!mostrarCalendario)}
-          title="Seleccionar rango de fechas"
         >
           📅 Seleccionar Fechas
         </button>
@@ -172,6 +191,7 @@ export const ListaPedidos = () => {
               tipoEntrega: "",
               fechas: { startDate: undefined, endDate: undefined, key: "selection" },
             });
+            setEstado("");
           }}
         >
           Limpiar filtros ❌
@@ -195,7 +215,7 @@ export const ListaPedidos = () => {
       <div className="filtros-aplicados">
         {filtros.usuario && (
           <span className="filtro-aplicado" onClick={() => quitarFiltro("usuario")}>
-            Delivery: {filtros.usuario} ×
+            Cliente: {filtros.usuario} ×
           </span>
         )}
         {filtros.metodoPago && (
@@ -208,50 +228,55 @@ export const ListaPedidos = () => {
             Entrega: {filtros.tipoEntrega} ×
           </span>
         )}
+        {estado && (
+          <span className="filtro-aplicado" onClick={() => quitarFiltro("estado")}>
+            Estado: {estado} ×
+          </span>
+        )}
         {filtros.fechas.startDate && filtros.fechas.endDate && (
           <span className="filtro-aplicado" onClick={() => quitarFiltro("fechas")}>
-            Fechas: {dayjs(filtros.fechas.startDate).format("DD/MM/YYYY")} -{" "}
-            {dayjs(filtros.fechas.endDate).format("DD/MM/YYYY")} ×
+            Fechas: {dayjs(filtros.fechas.startDate).format("DD/MM/YYYY")} - {dayjs(filtros.fechas.endDate).format("DD/MM/YYYY")} ×
           </span>
         )}
       </div>
 
       <div className="lista-pedidos">
-        {pedidosPaginados.length === 0 && (
-          <p className="sin-resultados">No se encontraron pedidos con esos filtros.</p>
-        )}
-
-        {pedidosPaginados.map((pedido) => (
-          <div
-            key={pedido._id}
-            className={`pedido-item ${expandedId === pedido._id ? "expandido" : ""}`}
-            onClick={() => setExpandedId((prev) => (prev === pedido._id ? null : pedido._id))}
-          >
-            <div className="resumen">
-              <strong>{pedido.nombreCliente}</strong> - {pedido.estado} - $
-              {pedido.total.toLocaleString("es-AR")}
-              <br />
-              <small>{formatearFecha(pedido.fechaPedido)}</small>
-            </div>
-
-            {expandedId === pedido._id && (
-              <div className="detalle">
-                <p>📞 Teléfono: {pedido.telefono}</p>
-                <p>👤 Delivery: {pedido.usuario}</p>
-                <p>🚚 Tipo de entrega: {pedido.tipoEntrega}</p>
-                <p>💳 Método de pago: {pedido.metodoPago}</p>
-                {pedido.address && <p>🏠 Dirección: {pedido.address}</p>}
-                {pedido.comentario && <p>💬 Comentario: {pedido.comentario}</p>}
-
-                <ul>
-                  {pedido.productos.map((prod, i) => (
-                    <li key={i}>
-                      {prod.cantidad} x {prod.producto} (${prod.precio.toLocaleString("es-AR")})
-                    </li>
-                  ))}
-                </ul>
+        {Object.entries(pedidosPorDia).map(([dia, pedidosDia]) => (
+          <div key={dia}>
+            <h3 className="fecha-header">{dia}</h3>
+            {pedidosDia.map((pedido) => (
+              <div
+                key={pedido._id}
+                className={`pedido-item ${expandedId === pedido._id ? "expandido" : ""}`}
+                onClick={() =>
+                  setExpandedId((prev) => (prev === pedido._id ? null : pedido._id))
+                }
+              >
+                <div className="resumen">
+                  <strong>{pedido.nombreCliente}</strong> - {pedido.estado} - $
+                  {pedido.total.toLocaleString("es-AR")}
+                  <br />
+                  <small>{dayjs(pedido.fechaPedido).format("HH:mm")} hs</small>
+                </div>
+                {expandedId === pedido._id && (
+                  <div className="detalle">
+                    <p>📞 Teléfono: {pedido.telefono}</p>
+                    <p>🚚 Tipo de entrega: {pedido.tipoEntrega}</p>
+                    <p>💳 Método de pago: {pedido.metodoPago}</p>
+                    {pedido.address && <p>🏠 Dirección: {pedido.address}</p>}
+                    {pedido.comentario && <p>💬 Comentario: {pedido.comentario}</p>}
+                    <ul>
+                      {pedido.productos.map((prod, i) => (
+                        <li key={i}>
+                          {prod.cantidad} x {prod.producto} ($
+                          {prod.precio.toLocaleString("es-AR")})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
         ))}
       </div>

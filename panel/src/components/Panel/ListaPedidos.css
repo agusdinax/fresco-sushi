@@ -176,7 +176,14 @@
   opacity: 0.5;
   cursor: default;
 }
-
+.fecha-header {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+  color: var(--color-contrast);
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.25rem;
+}
 @media (max-width: 700px) {
   .filtros {
     flex-direction: column;
