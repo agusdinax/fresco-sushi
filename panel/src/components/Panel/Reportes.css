@@ -1,23 +1,27 @@
-.reporte-panel {
-  max-width: 600px;
-  margin: auto;
+/* ReportesPanel.css */
+.reportes-panel {
   padding: 1rem;
-  background-color: #fff;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.filtros {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.graficos-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.grafico {
+  background: white;
+  padding: 1rem;
   border-radius: 1rem;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-.reporte-panel h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.reporte-panel ul {
-  list-style: none;
-  padding: 0;
-}
-
-.reporte-panel li {
-  margin: 0.5rem 0;
-  font-size: 1.1rem;
 }

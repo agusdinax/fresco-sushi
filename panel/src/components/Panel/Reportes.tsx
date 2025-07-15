@@ -1,84 +1,120 @@
 import { useEffect, useState } from "react";
-import "./Reportes.css"; 
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
+} from "recharts";
+import dayjs from "dayjs";
+import "dayjs/locale/es";
+dayjs.locale("es");
+
+const colores = ["#00C49F", "#FF8042", "#FFBB28", "#8884d8", "#ff6384"];
 
 interface Pedido {
-  id: number;
   fecha: string;
-  tipoEntrega: "delivery" | "takeaway";
-  metodoPago: "efectivo" | "transferencia";
-  productos: { nombre: string; cantidad: number }[];
-  // Agregá más campos si tu API los incluye
+  tipoEntrega: string;
+  metodoPago: string;
+  items: { nombre: string }[];
 }
 
 const Reportes = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [mesSeleccionado, setMesSeleccionado] = useState(dayjs().month() + 1); // 1 a 12
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
+  const obtenerPedidos = async () => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
       headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => res.json())
-      .then(data => {
-        setPedidos(data);
-        setLoading(false);
-      });
+    });
+    const data = await res.json();
+    setPedidos(data);
+  };
+
+  useEffect(() => {
+    obtenerPedidos();
   }, []);
 
-  if (loading) return <p>Cargando reportes...</p>;
+  const pedidosFiltrados = pedidos.filter((p) =>
+    dayjs(p.fecha).month() + 1 === Number(mesSeleccionado)
+  );
 
-  const pedidosDelMes = pedidos.filter(p => {
-    const fecha = new Date(p.fecha);
-    const hoy = new Date();
-    return (
-      fecha.getMonth() === hoy.getMonth() &&
-      fecha.getFullYear() === hoy.getFullYear()
-    );
+  const totalPorTipoEntrega = pedidosFiltrados.reduce((acc: any, p) => {
+    acc[p.tipoEntrega] = (acc[p.tipoEntrega] || 0) + 1;
+    return acc;
+  }, {});
+
+  const totalPorMetodoPago = pedidosFiltrados.reduce((acc: any, p) => {
+    acc[p.metodoPago] = (acc[p.metodoPago] || 0) + 1;
+    return acc;
+  }, {});
+
+  const opcionesContadas = pedidosFiltrados.flatMap((p) =>
+    Array.isArray(p.items) ? p.items.map((i) => i.nombre) : []
+  );
+
+  const conteoOpciones: Record<string, number> = {};
+  opcionesContadas.forEach((nombre) => {
+    conteoOpciones[nombre] = (conteoOpciones[nombre] || 0) + 1;
   });
 
-  const totalPedidosMes = pedidosDelMes.length;
-
-  const conteoEntregas = pedidosDelMes.reduce(
-    (acc, p) => {
-      acc[p.tipoEntrega]++;
-      return acc;
-    },
-    { takeaway: 0, delivery: 0 }
-  );
-
-  const conteoPagos = pedidosDelMes.reduce(
-    (acc, p) => {
-      acc[p.metodoPago]++;
-      return acc;
-    },
-    { efectivo: 0, transferencia: 0 }
-  );
-
-  const productos = pedidosDelMes.flatMap(p => p.productos);
-  const conteoProductos: Record<string, number> = {};
-
-  productos.forEach(p => {
-    conteoProductos[p.nombre] = (conteoProductos[p.nombre] || 0) + p.cantidad;
-  });
-
-  const productoMasPedido = Object.entries(conteoProductos).reduce(
-    (acc, [nombre, cantidad]) => (cantidad > acc.cantidad ? { nombre, cantidad } : acc),
-    { nombre: "", cantidad: 0 }
-  );
+  const dataOpciones = Object.entries(conteoOpciones)
+    .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+    .sort((a, b) => b.cantidad - a.cantidad)
+    .slice(0, 5); // top 5
 
   return (
-    <div className="reporte-panel">
-      <h2>📊 Reportes del mes</h2>
-      <ul>
-        <li>Total de pedidos: <strong>{totalPedidosMes}</strong></li>
-        <li>🍣 Opción más pedida: <strong>{productoMasPedido.nombre} ({productoMasPedido.cantidad})</strong></li>
-        <li>🚶 Takeaway: <strong>{conteoEntregas.takeaway}</strong></li>
-        <li>🏍️ Delivery: <strong>{conteoEntregas.delivery}</strong></li>
-        <li>💵 Efectivo: <strong>{conteoPagos.efectivo}</strong></li>
-        <li>🏦 Transferencia: <strong>{conteoPagos.transferencia}</strong></li>
-      </ul>
+    <div className="reportes-panel">
+      <div className="filtros">
+        <label>Mes:</label>
+        <select value={mesSeleccionado} onChange={(e) => setMesSeleccionado(Number(e.target.value))}>
+          {[...Array(12)].map((_, i) => (
+            <option key={i} value={i + 1}>{dayjs().month(i).format("MMMM")}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="graficos-container">
+        <div className="grafico">
+          <h3>Tipo de entrega</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={Object.entries(totalPorTipoEntrega).map(([tipo, cantidad]) => ({
+                name: tipo, value: cantidad
+              }))} dataKey="value" nameKey="name" outerRadius={80} label>
+                {Object.keys(totalPorTipoEntrega).map((_, index) => (
+                  <Cell key={index} fill={colores[index % colores.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grafico">
+          <h3>Método de pago</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={Object.entries(totalPorMetodoPago).map(([metodo, cantidad]) => ({
+              metodo, cantidad
+            }))}>
+              <XAxis dataKey="metodo" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="cantidad" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grafico">
+          <h3>Top 5 opciones más pedidas</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={dataOpciones}>
+              <XAxis dataKey="nombre" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="cantidad" fill="#ff6384" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 };
