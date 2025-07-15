@@ -7,6 +7,7 @@
   flex-direction: column;
   position: relative;
   height: 100vh;
+  flex-shrink: 0; 
 }
 
 /* CENTRAR LOGO EN DESKTOP Y ORDENAR EN MOBILE */
@@ -59,12 +60,12 @@
 .sidebar-nav a {
   color: white;
   text-decoration: none;
-  font-size: 1rem;
+  font-size: 1.2rem;
   transition: 0.3s;
 }
 
 .sidebar-nav a:hover {
-  color: #f99e31;
+  color: var(--color-primary)
 }
 
 /* LOGOUT + FOOTER */

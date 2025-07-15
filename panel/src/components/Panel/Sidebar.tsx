@@ -20,7 +20,9 @@ const Sidebar = () => {
   return (
     <aside className={`sidebar ${open ? "open" : ""}`}>
       <div className="sidebar-top">
-        <img src={logo} alt="FRESCO" className="sidebar-logo" />
+        <Link to="/panel/dashboard" onClick={() => setOpen(false)}>
+          <img src={logo} alt="FRESCO" className="sidebar-logo" />
+        </Link>
         <button className="menu-toggle" onClick={() => setOpen(!open)}>
           ☰
         </button>

@@ -26,7 +26,9 @@ export const Dashboard = () => {
   });
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [rol, setRol] = useState<string | null>(null);
-  const [mensaje, setMensaje] = useState<string | null>(null);
+
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState<{ mensaje: string; tipo: "ok" | "error" } | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -58,58 +60,37 @@ export const Dashboard = () => {
           // Pedidos del mes (todos)
           const pedidosMes = data.filter((p: Pedido) => {
             const fecha = new Date(p.fechaPedido);
-            return (
-              fecha.getMonth() === mesActual &&
-              fecha.getFullYear() === añoActual
-            );
+            return fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual;
           });
 
           let visibles = pedidosDelDia;
 
           if (rolGuardado === "delivery") {
-            // Filtrar solo pedidos del día con tipoEntrega "takeaway"
-            visibles = visibles.filter(
-              (p) => p.tipoEntrega.toLowerCase() === "takeaway"
-            );
+            visibles = visibles.filter((p) => p.tipoEntrega.toLowerCase() === "takeaway");
           }
 
           visibles.sort(
-            (a, b) =>
-              new Date(b.fechaPedido).getTime() -
-              new Date(a.fechaPedido).getTime()
+            (a, b) => new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime()
           );
 
           if (rolGuardado === "delivery") {
-            // Pendientes de entrega: estado "en reparto" dentro de los visibles
-            const pendientesEntrega = visibles.filter(
-              (p) => p.estado === "en reparto"
-            ).length;
-
-            // Total de pedidos con entrega takeaway del día
+            const pendientesEntrega = visibles.filter((p) => p.estado === "en reparto").length;
             const totalHoyTakeaway = pedidosDelDia.filter(
               (p) => p.tipoEntrega.toLowerCase() === "takeaway"
             ).length;
 
-            setResumen({
-              totalMes: 0,
-              pendientes: pendientesEntrega,
-              dia: totalHoyTakeaway,
-            });
+            setResumen({ totalMes: 0, pendientes: pendientesEntrega, dia: totalHoyTakeaway });
           } else {
-            // Para otros roles: pendientes por estado pendiente
             const pendientes = visibles.filter((p) => p.estado === "pendiente");
 
-            setResumen({
-              totalMes: pedidosMes.length,
-              pendientes: pendientes.length,
-              dia: visibles.length,
-            });
+            setResumen({ totalMes: pedidosMes.length, pendientes: pendientes.length, dia: visibles.length });
           }
 
           setPedidos(visibles);
         })
         .catch((error) => {
           console.error("Error obteniendo pedidos:", error);
+          setSnackbar({ mensaje: "❌ Error cargando pedidos", tipo: "error" });
         });
     };
 
@@ -121,34 +102,30 @@ export const Dashboard = () => {
   const actualizarEstado = async (id: string, nuevoEstado: string) => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/pedidos/${id}/estado`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ estado: nuevoEstado }),
-        }
-      );
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/${id}/estado`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
 
       if (res.ok) {
         const actualizado = await res.json();
         setPedidos((prev) =>
-          prev.map((p) =>
-            p._id === id ? { ...p, estado: actualizado.estado } : p
-          )
+          prev.map((p) => (p._id === id ? { ...p, estado: actualizado.estado } : p))
         );
-        setMensaje("✅ Estado actualizado correctamente.");
-        setTimeout(() => setMensaje(null), 3000);
+        setSnackbar({ mensaje: "✅ Estado actualizado correctamente.", tipo: "ok" });
       } else {
-        setMensaje("❌ Error al actualizar estado.");
+        setSnackbar({ mensaje: "❌ Error al actualizar estado.", tipo: "error" });
       }
     } catch (err) {
       console.error("Error en fetch PATCH:", err);
-      setMensaje("❌ Error al actualizar estado.");
+      setSnackbar({ mensaje: "❌ Error al actualizar estado.", tipo: "error" });
     }
+
+    setTimeout(() => setSnackbar(null), 3000);
   };
 
   const formatoPesos = (monto: number) =>
@@ -177,67 +154,68 @@ export const Dashboard = () => {
         )}
       </div>
 
-      {mensaje && <div className="mensaje-confirmacion">{mensaje}</div>}
+      {/* Snackbar */}
+      {snackbar && (
+        <div className={`snackbar ${snackbar.tipo === "ok" ? "snackbar-ok" : "snackbar-error"}`}>
+          {snackbar.mensaje}
+        </div>
+      )}
 
       <h3 style={{ marginTop: "2rem" }}>📦 Listado de Pedidos</h3>
-      <div className="tabla-scroll">
-        <table className="tabla-pedidos">
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Teléfono</th>
-              <th>Productos</th>
-              <th>Total</th>
-              <th>Método Pago</th>
-              <th>Entrega</th>
-              <th>Dirección</th>
-              <th>Comentario</th>
-              <th>Estado</th>
-              <th>Fecha</th>
-              {rol === "owner" && <th>Actualizar</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {pedidos.map((pedido) => (
-              <tr key={pedido._id} data-estado={pedido.estado}>
-                <td>{pedido.nombreCliente}</td>
-                <td>{pedido.telefono}</td>
-                <td>
-                  {pedido.productos.map((p, i) => (
-                    <div key={i}>
-                      {p.cantidad}×{" "}
-                      {typeof p.producto === "string"
-                        ? p.producto
-                        : p.producto.nombre}
-                    </div>
-                  ))}
-                </td>
-                <td>{formatoPesos(pedido.total)}</td>
-                <td>{pedido.metodoPago}</td>
-                <td>{pedido.tipoEntrega}</td>
-                <td>{pedido.address || "-"}</td>
-                <td>{pedido.comentario || "-"}</td>
-                <td>{pedido.estado}</td>
-                <td>{new Date(pedido.fechaPedido).toLocaleString()}</td>
-                {rol === "owner" && (
-                  <td>
-                    <select
-                      value={pedido.estado}
-                      onChange={(e) =>
-                        actualizarEstado(pedido._id, e.target.value)
-                      }
-                    >
-                      <option value="pendiente">Pendiente</option>
-                      <option value="en preparación">En preparación</option>
-                      <option value="en reparto">En reparto</option>
-                      <option value="entregado">Entregado</option>
-                    </select>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      {/* Cards layout para pedidos */}
+      <div className="pedidos-cards">
+        {pedidos.map((pedido) => (
+          <div className="pedido-card" key={pedido._id} data-estado={pedido.estado}>
+            <h4>{pedido.nombreCliente}</h4>
+            <p>
+              <strong>Teléfono:</strong> {pedido.telefono}
+            </p>
+            <p>
+              <strong>Productos:</strong>
+            </p>
+            <ul>
+              {pedido.productos.map((p, i) => (
+                <li key={i}>
+                  {p.cantidad} × {typeof p.producto === "string" ? p.producto : p.producto.nombre}
+                </li>
+              ))}
+            </ul>
+            <p>
+              <strong>Total:</strong> {formatoPesos(pedido.total)}
+            </p>
+            <p>
+              <strong>Método Pago:</strong> {pedido.metodoPago}
+            </p>
+            <p>
+              <strong>Entrega:</strong> {pedido.tipoEntrega}
+            </p>
+            <p>
+              <strong>Dirección:</strong> {pedido.address || "-"}
+            </p>
+            <p>
+              <strong>Comentario:</strong> {pedido.comentario || "-"}
+            </p>
+            <p>
+              <strong>Estado:</strong> {pedido.estado}
+            </p>
+            <p>
+              <strong>Fecha:</strong> {new Date(pedido.fechaPedido).toLocaleString()}
+            </p>
+
+            {rol === "owner" && (
+              <select
+                value={pedido.estado}
+                onChange={(e) => actualizarEstado(pedido._id, e.target.value)}
+              >
+                <option value="pendiente">Pendiente</option>
+                <option value="en preparación">En preparación</option>
+                <option value="en reparto">En reparto</option>
+                <option value="entregado">Entregado</option>
+              </select>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
