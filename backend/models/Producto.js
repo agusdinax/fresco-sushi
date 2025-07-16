@@ -30,7 +30,7 @@ const ProductoSchema = new mongoose.Schema({
   fechaCreacion: {
     type: Date,
     default: Date.now
-  }
+  }, 
 });
 
 // El campo `id` no hace falta definirlo, MongoDB ya asigna _id automáticamente

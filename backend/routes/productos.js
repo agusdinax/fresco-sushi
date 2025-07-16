@@ -2,9 +2,26 @@ const express = require('express');
 const router = express.Router();
 const Producto = require('../models/Producto');
 const { protect, restrictTo } = require('../middleware/auth');
+const StockGeneral = require("../models/StockGeneral");
+
+const multer = require('multer');
+
+// Configuración básica para guardar archivos en disco en carpeta 'uploads/'
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // crea la carpeta uploads si no existe
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    // Guarda con un nombre único para evitar sobreescritura
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
 
 // ✅ Crear producto (solo "owner")
-router.post('/', protect, restrictTo('owner'), async (req, res) => {
+router.post('/', protect, restrictTo('owner'), upload.single("image"), async (req, res) => {
   try {
     const { category, name, description, price, image, disponible } = req.body;
 
@@ -15,6 +32,7 @@ router.post('/', protect, restrictTo('owner'), async (req, res) => {
       price,
       image,
       disponible,
+      stockActivo
     });
 
     await nuevoProducto.save();
@@ -48,7 +66,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ✅ Actualizar producto (solo "owner")
-router.put('/:id', protect, restrictTo('owner'), async (req, res) => {
+router.put('/:id', protect, restrictTo('owner'), upload.single("image"), async (req, res) => {
   try {
     const productoActualizado = await Producto.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -76,13 +94,145 @@ router.delete('/:id', protect, restrictTo('owner'), async (req, res) => {
   }
 });
 
-module.exports = router;
+// ✅ Cambiar disponibilidad de un producto (individual)
+router.patch('/:id/disponible', protect, restrictTo('owner'), async (req, res) => {
+  try {
+    const { disponible } = req.body;
+    if (typeof disponible !== "boolean") {
+      return res.status(400).json({ message: 'Se espera el campo "disponible" como booleano' });
+    }
 
+    const producto = await Producto.findByIdAndUpdate(
+      req.params.id,
+      { disponible },
+      { new: true, runValidators: true }
+    );
+
+    if (!producto) return res.status(404).json({ message: 'Producto no encontrado' });
+
+    res.json({ message: 'Disponibilidad actualizada', producto });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar disponibilidad' });
+  }
+});
+
+// ✅ Obtener estado de stock general
+router.get('/configuracion/stock-general', async (req, res) => {
+  try {
+    let config = await ConfiguracionGlobal.findOne();
+    if (!config) {
+      config = await ConfiguracionGlobal.create({ stockGeneralActivo: true });
+    }
+    res.json({ stockGeneralActivo: config.stockGeneralActivo });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener configuración global' });
+  }
+});
+
+// ✅ Actualizar stock general (activar / desactivar todos)
+router.patch('/configuracion/stock-general', protect, restrictTo('owner'), async (req, res) => {
+  try {
+    const { stockGeneralActivo } = req.body;
+    if (typeof stockGeneralActivo !== "boolean") {
+      return res.status(400).json({ message: 'Se espera el campo "stockGeneralActivo" como booleano' });
+    }
+
+    let config = await ConfiguracionGlobal.findOne();
+    if (!config) {
+      config = new ConfiguracionGlobal({ stockGeneralActivo });
+    } else {
+      config.stockGeneralActivo = stockGeneralActivo;
+    }
+
+    await config.save();
+
+    res.json({ message: `Stock general ${stockGeneralActivo ? 'activado' : 'desactivado'}`, config });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar el estado de stock general' });
+  }
+});
+
+
+module.exports = router;
 /**
  * @swagger
  * tags:
- *   name: Productos
- *   description: Gestión de productos
+ *   - name: Productos
+ *     description: Gestión de productos
+ *   - name: ConfiguracionGlobal
+ *     description: Configuración general del stock
+ *
+ * components:
+ *   schemas:
+ *     Producto:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: "64ab1234cd56ef7890ab1234"
+ *         category:
+ *           type: string
+ *           example: "Sushi"
+ *         name:
+ *           type: string
+ *           example: "California Roll"
+ *         description:
+ *           type: string
+ *           example: "Delicioso roll con aguacate y cangrejo"
+ *         price:
+ *           type: number
+ *           example: 500
+ *         image:
+ *           type: string
+ *           example: "https://tusitio.com/images/producto1.jpg"
+ *         disponible:
+ *           type: boolean
+ *           example: true
+ *         fechaCreacion:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-06-28T14:20:30.000Z"
+ *     ProductoInput:
+ *       type: object
+ *       properties:
+ *         category:
+ *           type: string
+ *           example: "Sushi"
+ *         name:
+ *           type: string
+ *           example: "California Roll"
+ *         description:
+ *           type: string
+ *           example: "Delicioso roll con aguacate y cangrejo"
+ *         price:
+ *           type: number
+ *           example: 500
+ *         image:
+ *           type: string
+ *           description: Base64 o URL o path de imagen
+ *         disponible:
+ *           type: boolean
+ *           example: true
+ *     DisponibilidadUpdate:
+ *       type: object
+ *       properties:
+ *         disponible:
+ *           type: boolean
+ *           example: false
+ *     StockGeneralConfig:
+ *       type: object
+ *       properties:
+ *         stockGeneralActivo:
+ *           type: boolean
+ *           example: true
+ *     StockGeneralResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: "Stock general activado"
+ *         config:
+ *           $ref: '#/components/schemas/StockGeneralConfig'
  */
 
 /**
@@ -115,19 +265,37 @@ module.exports = router;
  *         description: Error al obtener productos
  *
  *   post:
- *     summary: Crear un nuevo producto (requiere rol owner)
+ *     summary: Crear un nuevo producto (solo owner)
  *     tags: [Productos]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/ProductoInput'
+ *             type: object
+ *             properties:
+ *               category:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *               disponible:
+ *                 type: boolean
+ *             required:
+ *               - category
+ *               - name
+ *               - price
  *     responses:
  *       201:
- *         description: Producto creado exitosamente
+ *         description: Producto creado correctamente
  *         content:
  *           application/json:
  *             schema:
@@ -135,13 +303,11 @@ module.exports = router;
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Producto creado correctamente
+ *                   example: "Producto creado correctamente"
  *                 producto:
  *                   $ref: '#/components/schemas/Producto'
  *       401:
  *         description: No autorizado
- *       403:
- *         description: Acceso prohibido (no es owner)
  *       500:
  *         description: Error al crear el producto
  */
@@ -150,7 +316,7 @@ module.exports = router;
  * @swagger
  * /api/productos/{id}:
  *   get:
- *     summary: Obtener un producto por ID (público)
+ *     summary: Obtener un producto por ID
  *     tags: [Productos]
  *     parameters:
  *       - in: path
@@ -158,7 +324,7 @@ module.exports = router;
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del producto a obtener
+ *         description: ID del producto
  *     responses:
  *       200:
  *         description: Producto encontrado
@@ -170,9 +336,8 @@ module.exports = router;
  *         description: Producto no encontrado
  *       500:
  *         description: Error al obtener el producto
- *
  *   put:
- *     summary: Actualizar un producto por ID (requiere rol owner)
+ *     summary: Actualizar un producto (solo owner)
  *     tags: [Productos]
  *     security:
  *       - bearerAuth: []
@@ -182,13 +347,26 @@ module.exports = router;
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del producto a actualizar
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/ProductoInput'
+ *             type: object
+ *             properties:
+ *               category:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *               disponible:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Producto actualizado correctamente
@@ -199,20 +377,17 @@ module.exports = router;
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Producto actualizado correctamente
+ *                   example: "Producto actualizado correctamente"
  *                 producto:
  *                   $ref: '#/components/schemas/Producto'
- *       401:
- *         description: No autorizado
- *       403:
- *         description: Acceso prohibido (no es owner)
  *       404:
  *         description: Producto no encontrado
+ *       401:
+ *         description: No autorizado
  *       500:
  *         description: Error al actualizar el producto
- *
  *   delete:
- *     summary: Eliminar un producto por ID (requiere rol owner)
+ *     summary: Eliminar un producto (solo owner)
  *     tags: [Productos]
  *     security:
  *       - bearerAuth: []
@@ -222,7 +397,6 @@ module.exports = router;
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del producto a eliminar
  *     responses:
  *       200:
  *         description: Producto eliminado correctamente
@@ -233,80 +407,96 @@ module.exports = router;
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Producto eliminado correctamente
- *       401:
- *         description: No autorizado
- *       403:
- *         description: Acceso prohibido (no es owner)
+ *                   example: "Producto eliminado correctamente"
  *       404:
  *         description: Producto no encontrado
+ *       401:
+ *         description: No autorizado
  *       500:
  *         description: Error al eliminar el producto
  */
 
 /**
  * @swagger
- * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *
- *   schemas:
- *     Producto:
- *       type: object
- *       properties:
- *         _id:
+ * /api/productos/{id}/disponible:
+ *   patch:
+ *     summary: Cambiar disponibilidad de un producto (solo owner)
+ *     tags: [Productos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
  *           type: string
- *           description: ID del producto
- *           example: 64c9e9f1a5b72c001f2a8e3f
- *         category:
- *           type: string
- *           example: sushi
- *         name:
- *           type: string
- *           example: Roll de salmón
- *         description:
- *           type: string
- *           example: Roll de salmón fresco con aguacate
- *         price:
- *           type: number
- *           example: 1200.5
- *         image:
- *           type: string
- *           example: https://misitio.com/images/salmon-roll.jpg
- *         disponible:
- *           type: boolean
- *           example: true
- *         fechaCreacion:
- *           type: string
- *           format: date-time
- *           example: 2023-07-20T15:23:30.000Z
- *
- *     ProductoInput:
- *       type: object
- *       required:
- *         - category
- *         - name
- *         - price
- *       properties:
- *         category:
- *           type: string
- *           example: sushi
- *         name:
- *           type: string
- *           example: Roll de salmón
- *         description:
- *           type: string
- *           example: Roll de salmón fresco con aguacate
- *         price:
- *           type: number
- *           example: 1200.5
- *         image:
- *           type: string
- *           example: https://misitio.com/images/salmon-roll.jpg
- *         disponible:
- *           type: boolean
- *           example: true
+ *         description: ID del producto
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/DisponibilidadUpdate'
+ *     responses:
+ *       200:
+ *         description: Disponibilidad actualizada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Disponibilidad actualizada"
+ *                 producto:
+ *                   $ref: '#/components/schemas/Producto'
+ *       400:
+ *         description: Bad Request - campo disponible inválido
+ *       404:
+ *         description: Producto no encontrado
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error al actualizar disponibilidad
+ */
+
+/**
+ * @swagger
+ * /api/productos/configuracion/stock-general:
+ *   get:
+ *     summary: Obtener estado del stock general
+ *     tags: [ConfiguracionGlobal]
+ *     responses:
+ *       200:
+ *         description: Estado actual del stock general
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StockGeneralConfig'
+ *       500:
+ *         description: Error al obtener configuración global
+ *   patch:
+ *     summary: Actualizar estado del stock general (solo owner)
+ *     tags: [ConfiguracionGlobal]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/StockGeneralConfig'
+ *     responses:
+ *       200:
+ *         description: Estado actualizado del stock general
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StockGeneralResponse'
+ *       400:
+ *         description: Bad Request - campo inválido
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error al actualizar stock general
  */

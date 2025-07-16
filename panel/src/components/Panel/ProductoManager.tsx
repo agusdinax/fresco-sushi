@@ -1,7 +1,7 @@
-// src/components/Panel/ProductoManager.tsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -33,7 +33,12 @@ const ProductoManager = () => {
   const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" | "info" }>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
   const [formData, setFormData] = useState<Omit<Producto, "_id">>({
     name: "",
     category: "",
@@ -44,10 +49,8 @@ const ProductoManager = () => {
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Asumiendo que el token está en localStorage, ajustá según tu lógica
   const token = localStorage.getItem("token") || "";
 
-  // Configuración headers para axios
   const axiosConfig = {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -59,15 +62,9 @@ const ProductoManager = () => {
     setError(null);
     try {
       const res = await axios.get(`${API_URL}/api/productos`, axiosConfig);
-      if (Array.isArray(res.data)) {
-        setProductos(res.data);
-      } else if (Array.isArray(res.data.productos)) {
-        setProductos(res.data.productos);
-      } else {
-        setProductos([]);
-        setError("Respuesta inesperada del servidor");
-      }
-    } catch (err) {
+      const data = Array.isArray(res.data) ? res.data : res.data.productos;
+      setProductos(Array.isArray(data) ? data : []);
+    } catch {
       setError("Error al obtener productos");
       setProductos([]);
     } finally {
@@ -82,16 +79,10 @@ const ProductoManager = () => {
   const handleOpenDialog = (producto?: Producto) => {
     if (producto) {
       setEditingProduct(producto);
-      setFormData({
-        name: producto.name,
-        category: producto.category,
-        description: producto.description,
-        price: producto.price,
-        disponible: producto.disponible,
-        image: producto.image,
-      });
+      setFormData({ ...producto });
       setImagePreview(producto.image);
     } else {
+      setEditingProduct(null);
       setFormData({
         name: "",
         category: "",
@@ -134,28 +125,28 @@ const ProductoManager = () => {
     try {
       if (editingProduct) {
         await axios.put(`${API_URL}/api/productos/${editingProduct._id}`, formData, axiosConfig);
-        setSnackbar({ open: true, message: "Producto actualizado correctamente" });
+        setSnackbar({ open: true, message: "Producto actualizado correctamente", severity: "success" });
       } else {
         await axios.post(`${API_URL}/api/productos`, formData, axiosConfig);
-        setSnackbar({ open: true, message: "Producto creado correctamente" });
+        setSnackbar({ open: true, message: "Producto creado correctamente", severity: "success" });
       }
       handleCloseDialog();
       fetchProductos();
-    } catch (error) {
-      console.error(error);
-      setSnackbar({ open: true, message: "Error al guardar el producto" });
+    } catch {
+      setSnackbar({ open: true, message: "Error al guardar el producto", severity: "error" });
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("¿Seguro que querés eliminar este producto?")) {
-      try {
-        await axios.delete(`${API_URL}/api/productos/${id}`, axiosConfig);
-        setSnackbar({ open: true, message: "Producto eliminado correctamente" });
-        fetchProductos();
-      } catch {
-        setSnackbar({ open: true, message: "Error al eliminar el producto" });
-      }
+  const confirmDelete = async () => {
+    if (!deleteDialog.id) return;
+    try {
+      await axios.delete(`${API_URL}/api/productos/${deleteDialog.id}`, axiosConfig);
+      setSnackbar({ open: true, message: "Producto eliminado correctamente", severity: "success" });
+      fetchProductos();
+    } catch {
+      setSnackbar({ open: true, message: "Error al eliminar el producto", severity: "error" });
+    } finally {
+      setDeleteDialog({ open: false, id: null });
     }
   };
 
@@ -177,7 +168,7 @@ const ProductoManager = () => {
         <div className="loading"><CircularProgress /></div>
       ) : error ? (
         <p className="error">{error}</p>
-      ) : Array.isArray(productos) && productos.length > 0 ? (
+      ) : productos.length > 0 ? (
         <div className="producto-lista">
           {productos.map(producto => (
             <div className="producto-card" key={producto._id}>
@@ -195,7 +186,9 @@ const ProductoManager = () => {
               </p>
               <div className="acciones">
                 <IconButton onClick={() => handleOpenDialog(producto)}><EditIcon /></IconButton>
-                <IconButton onClick={() => handleDelete(producto._id)}><DeleteIcon color="error" /></IconButton>
+                <IconButton onClick={() => setDeleteDialog({ open: true, id: producto._id })}>
+                  <DeleteIcon color="error" />
+                </IconButton>
               </div>
             </div>
           ))}
@@ -204,6 +197,7 @@ const ProductoManager = () => {
         <p>No hay productos para mostrar.</p>
       )}
 
+      {/* Formulario de creación / edición */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{editingProduct ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
         <DialogContent className="form-dialog">
@@ -222,12 +216,29 @@ const ProductoManager = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Modal de confirmación de eliminación */}
+      <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, id: null })}>
+        <DialogTitle>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          ¿Estás seguro que querés eliminar este producto?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ open: false, id: null })}>Cancelar</Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">Eliminar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar con colores */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar({ open: false, message: "" })}
-        message={snackbar.message}
-      />
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} variant="filled" onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
