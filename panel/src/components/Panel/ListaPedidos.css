@@ -5,8 +5,9 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #ffffff;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
   color: #222;
+  max-width: 100%;
 }
 
 .titulo-lista {

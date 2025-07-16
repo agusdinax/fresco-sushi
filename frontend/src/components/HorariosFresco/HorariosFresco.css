@@ -2,7 +2,7 @@
   width: 100%;
   background: #fff;
   backdrop-filter: blur(10px);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
   font-size: 0.9rem;
   display: flex;
   justify-content: center;
@@ -12,7 +12,6 @@
   z-index: 100;
   text-align: center;
   transition: background 0.3s ease, color 0.3s ease;
-  margin-bottom: 1rem;
   height: 5.3rem;
 }
 
