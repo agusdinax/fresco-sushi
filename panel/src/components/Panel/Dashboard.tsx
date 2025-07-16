@@ -155,15 +155,15 @@ export const Dashboard = () => {
         ) : (
           <>
             <div className="card">
-              <div className="card-label">⏳ Pendientes</div>
+              <div className="card-label">⏳NUEVOS PEDIDOS</div>
               <div className="card-number highlight-orange">{resumen.pendientes}</div>
             </div>
             <div className="card">
-              <div className="card-label">📅 Pedidos del día</div>
+              <div className="card-label">📅TOTAL DEL DÍA</div>
               <div className="card-number">{resumen.dia}</div>
             </div>
             <div className="card">
-              <div className="card-label">📈 Total del mes</div>
+              <div className="card-label">📈TOTAL DEL MES</div>
               <div className="card-number highlight-blue">{resumen.totalMes}</div>
             </div>
           </>
@@ -177,8 +177,7 @@ export const Dashboard = () => {
         </div>
       )}
 
-      <h3 style={{ marginTop: "2rem" }}>📦 Listado de Pedidos</h3>
-
+      <h2>📦 Listado de Pedidos</h2>
       {/* Cards layout para pedidos */}
       <div className="pedidos-cards">
         {pedidos.map((pedido) => (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DateRange } from "react-date-range";
 import type { Range } from "react-date-range";
 import dayjs from "dayjs";
@@ -25,7 +25,7 @@ interface Pedido {
   telefono: string;
   productos: Producto[];
   total: number;
-  estado: "pendiente" | "en preparaci\u00f3n" | "en reparto" | "entregado";
+  estado: "pendiente" | "en preparación" | "en reparto" | "entregado";
   fechaPedido: string;
   usuario: string;
   metodoPago: string;
@@ -55,6 +55,8 @@ export const ListaPedidos = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const pedidosPorPagina = 20;
 
+  const calendarioRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const fetchPedidos = () => {
       const token = localStorage.getItem("token");
@@ -70,6 +72,20 @@ export const ListaPedidos = () => {
     const interval = setInterval(fetchPedidos, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const handleClickFuera = (e: MouseEvent) => {
+      if (calendarioRef.current && !calendarioRef.current.contains(e.target as Node)) {
+        setMostrarCalendario(false);
+      }
+    };
+    if (mostrarCalendario) {
+      document.addEventListener("mousedown", handleClickFuera);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickFuera);
+    };
+  }, [mostrarCalendario]);
 
   const pedidosFiltrados = pedidos.filter((pedido) => {
     if (filtros.fechas.startDate && filtros.fechas.endDate) {
@@ -199,17 +215,19 @@ export const ListaPedidos = () => {
       </div>
 
       {mostrarCalendario && (
-        <DateRange
-          editableDateInputs
-          onChange={(item) => {
-            setPaginaActual(1);
-            setFiltros({ ...filtros, fechas: item.selection });
-          }}
-          moveRangeOnFirstSelection={false}
-          ranges={[filtros.fechas]}
-          locale={es}
-          maxDate={new Date()}
-        />
+        <div ref={calendarioRef} className="popup-calendario">
+          <DateRange
+            editableDateInputs
+            onChange={(item) => {
+              setPaginaActual(1);
+              setFiltros({ ...filtros, fechas: item.selection });
+            }}
+            moveRangeOnFirstSelection={false}
+            ranges={[filtros.fechas]}
+            locale={es}
+            maxDate={new Date()}
+          />
+        </div>
       )}
 
       <div className="filtros-aplicados">

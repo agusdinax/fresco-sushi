@@ -131,6 +131,18 @@
   color: #374151;
 }
 
+.popup-calendario {
+  position: absolute;
+  z-index: 1000;
+  top: 160px; /* ajustá según el alto del header/filtros */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  padding: 0.5rem;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
 .detalle ul {
   padding-left: 1.2rem;
   list-style-type: disc;

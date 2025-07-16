@@ -9,6 +9,7 @@
   display: flex;
   height: 100vh;
 }
+
 .dashboard-cards {
   display: flex;
   gap: 1rem;
@@ -16,7 +17,7 @@
   margin-bottom: 1.5rem;
   justify-content: center;
   width: 100%;
-  max-width: 900px;
+  max-width: 1000px;
 }
 .card-label {
   font-size: 1rem;
@@ -37,6 +38,7 @@
 .highlight-blue {
   color: #3498db;
 }
+
 .card {
   background: #fff;
   padding: 1rem;
@@ -117,7 +119,7 @@
   gap: 0.2rem;
   border-left: 5px solid transparent;
   transition: box-shadow 0.3s;
-  max-height: 450px; 
+  max-height: 420px; 
   overflow-y: auto;
   word-wrap: break-word
 }
@@ -151,6 +153,9 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
+}
+.pedido-card p{
+  font-size: 14px;
 }
 .pedido-card ul{
   margin-left: 2rem;
