@@ -24,10 +24,10 @@ router.post('/register', async (req, res) => {
 
 // Login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { user, password } = req.body;
 
   try {
-    const usuario = await Usuario.findOne({ email });
+    const usuario = await Usuario.findOne({ user });
     if (!usuario) {
       return res.status(400).json({ message: 'Email o contraseña incorrectos' });
     }
