@@ -1,7 +1,6 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { useEffect } from "react";
-import "./panel.css";
 
 const PanelLayout = () => {
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./panel.css";
+import "./Dashboard.css";
 
 interface Pedido {
   _id: string;
@@ -143,14 +143,29 @@ export const Dashboard = () => {
       <div className="dashboard-cards">
         {rol === "delivery" ? (
           <>
-            <div className="card">📦 Pendientes de entrega: {resumen.pendientes}</div>
-            <div className="card">📅 Total del día con entrega: {resumen.dia}</div>
+            <div className="card">
+              <div className="card-label">📦 Pendientes de entrega</div>
+              <div className="card-number highlight-orange">{resumen.pendientes}</div>
+            </div>
+            <div className="card">
+              <div className="card-label">📅 Total del día con entrega</div>
+              <div className="card-number">{resumen.dia}</div>
+            </div>
           </>
         ) : (
           <>
-            <div className="card">⏳ Pendientes: {resumen.pendientes}</div>
-            <div className="card">📅 Pedidos del día: {resumen.dia}</div>
-            <div className="card">📈 Total del mes: {resumen.totalMes}</div>
+            <div className="card">
+              <div className="card-label">⏳ Pendientes</div>
+              <div className="card-number highlight-orange">{resumen.pendientes}</div>
+            </div>
+            <div className="card">
+              <div className="card-label">📅 Pedidos del día</div>
+              <div className="card-number">{resumen.dia}</div>
+            </div>
+            <div className="card">
+              <div className="card-label">📈 Total del mes</div>
+              <div className="card-number highlight-blue">{resumen.totalMes}</div>
+            </div>
           </>
         )}
       </div>
