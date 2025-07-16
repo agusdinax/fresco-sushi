@@ -32,7 +32,6 @@ router.post('/', protect, restrictTo('owner'), upload.single("image"), async (re
       price,
       image,
       disponible,
-      stockActivo
     });
 
     await nuevoProducto.save();
@@ -119,9 +118,9 @@ router.patch('/:id/disponible', protect, restrictTo('owner'), async (req, res) =
 // ✅ Obtener estado de stock general
 router.get('/configuracion/stock-general', async (req, res) => {
   try {
-    let config = await ConfiguracionGlobal.findOne();
+    let config = await StockGeneral.findOne();
     if (!config) {
-      config = await ConfiguracionGlobal.create({ stockGeneralActivo: true });
+      config = await StockGeneral.create({ stockGeneralActivo: true });
     }
     res.json({ stockGeneralActivo: config.stockGeneralActivo });
   } catch (error) {
@@ -137,9 +136,9 @@ router.patch('/configuracion/stock-general', protect, restrictTo('owner'), async
       return res.status(400).json({ message: 'Se espera el campo "stockGeneralActivo" como booleano' });
     }
 
-    let config = await ConfiguracionGlobal.findOne();
+    let config = await StockGeneral.findOne();
     if (!config) {
-      config = new ConfiguracionGlobal({ stockGeneralActivo });
+      config = new StockGeneral({ stockGeneralActivo });
     } else {
       config.stockGeneralActivo = stockGeneralActivo;
     }

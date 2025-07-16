@@ -1,3 +1,4 @@
+// ProductoManager.tsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Snackbar from "@mui/material/Snackbar";
@@ -13,6 +14,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CircularProgress from "@mui/material/CircularProgress";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import "./ProductoManager.css";
 
 interface Producto {
@@ -48,6 +51,7 @@ const ProductoManager = () => {
     image: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [stockGeneralActivo, setStockGeneralActivo] = useState<boolean>(false);
 
   const token = localStorage.getItem("token") || "";
 
@@ -72,8 +76,29 @@ const ProductoManager = () => {
     }
   };
 
+  const fetchStockGeneral = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/productos/configuracion/stock-general`, axiosConfig);
+      setStockGeneralActivo(res.data.stockGeneralActivo);
+    } catch {
+      setSnackbar({ open: true, message: "Error al obtener el stock general", severity: "error" });
+    }
+  };
+
+  const handleToggleStockGeneral = async () => {
+    try {
+      const nuevoEstado = !stockGeneralActivo;
+      await axios.patch(`${API_URL}/api/productos/configuracion/stock-general`, { stockGeneralActivo: nuevoEstado }, axiosConfig);
+      setStockGeneralActivo(nuevoEstado);
+      setSnackbar({ open: true, message: `Stock general ${nuevoEstado ? "activado" : "desactivado"}`, severity: "success" });
+    } catch {
+      setSnackbar({ open: true, message: "Error al actualizar el stock general", severity: "error" });
+    }
+  };
+
   useEffect(() => {
     fetchProductos();
+    fetchStockGeneral();
   }, []);
 
   const handleOpenDialog = (producto?: Producto) => {
@@ -153,15 +178,16 @@ const ProductoManager = () => {
   return (
     <div className="producto-manager">
       <div className="header">
-        <h2>Gestión de Productos</h2>
-        <Button
-          startIcon={<AddCircleIcon />}
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpenDialog()}
-        >
+        <h2>📝GESTIÓN DE MENÚ</h2>
+        <Button startIcon={<AddCircleIcon />} variant="contained" color="primary" onClick={() => handleOpenDialog()}>
           Nuevo Producto
         </Button>
+      </div>
+
+      <div className="stock-general">
+        <label>
+          <input type="checkbox" checked={stockGeneralActivo} onChange={handleToggleStockGeneral} /> Hay stock general
+        </label>
       </div>
 
       {loading ? (
@@ -177,18 +203,15 @@ const ProductoManager = () => {
               <p>{producto.description}</p>
               <p>
                 <strong>
-                  {new Intl.NumberFormat("es-AR", {
-                    style: "currency",
-                    currency: "ARS",
-                    minimumFractionDigits: 0,
-                  }).format(producto.price)}
+                  {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0 }).format(producto.price)}
                 </strong>
               </p>
+              <span className={`estado-producto ${producto.disponible ? "disponible" : "no-disponible"}`}>
+                {producto.disponible ? "Disponible" : "No disponible"}
+              </span>
               <div className="acciones">
                 <IconButton onClick={() => handleOpenDialog(producto)}><EditIcon /></IconButton>
-                <IconButton onClick={() => setDeleteDialog({ open: true, id: producto._id })}>
-                  <DeleteIcon color="error" />
-                </IconButton>
+                <IconButton onClick={() => setDeleteDialog({ open: true, id: producto._id })}><DeleteIcon color="error" /></IconButton>
               </div>
             </div>
           ))}
@@ -197,47 +220,34 @@ const ProductoManager = () => {
         <p>No hay productos para mostrar.</p>
       )}
 
-      {/* Formulario de creación / edición */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{editingProduct ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
         <DialogContent className="form-dialog">
-          <TextField label="Nombre" name="name" fullWidth value={formData.name} onChange={handleChange} />
-          <TextField label="Categoría" name="category" fullWidth value={formData.category} onChange={handleChange} />
-          <TextField label="Descripción" name="description" fullWidth multiline value={formData.description} onChange={handleChange} />
-          <TextField label="Precio" name="price" type="number" fullWidth value={formData.price} onChange={handleChange} />
+          <TextField label="Nombre" name="name" fullWidth value={formData.name} onChange={handleChange} placeholder="Ej: Sushi Salmón" />
+          <TextField label="Categoría" name="category" fullWidth value={formData.category} onChange={handleChange} placeholder="Ej: Rolls" />
+          <TextField label="Descripción" name="description" fullWidth multiline value={formData.description} onChange={handleChange} placeholder="Ej: Con queso y palta" />
+          <TextField label="Precio (ARS)" name="price" type="number" fullWidth value={formData.price} onChange={handleChange} placeholder="Ej: 2500" />
+          <FormControlLabel control={<Checkbox checked={formData.disponible} onChange={(e) => setFormData(prev => ({ ...prev, disponible: e.target.checked }))} />} label="Producto disponible" />
           <input type="file" accept="image/*" onChange={handleImageUpload} />
           {imagePreview && <img src={imagePreview} className="preview" alt="preview" />}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            {editingProduct ? "Actualizar" : "Crear"}
-          </Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">{editingProduct ? "Actualizar" : "Crear"}</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Modal de confirmación de eliminación */}
       <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, id: null })}>
         <DialogTitle>Confirmar eliminación</DialogTitle>
-        <DialogContent>
-          ¿Estás seguro que querés eliminar este producto?
-        </DialogContent>
+        <DialogContent>¿Estás seguro que querés eliminar este producto?</DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialog({ open: false, id: null })}>Cancelar</Button>
           <Button onClick={confirmDelete} color="error" variant="contained">Eliminar</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar con colores */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert severity={snackbar.severity} variant="filled" onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
-          {snackbar.message}
-        </Alert>
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+        <Alert severity={snackbar.severity} variant="filled" onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>{snackbar.message}</Alert>
       </Snackbar>
     </div>
   );
