@@ -16,6 +16,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CircularProgress from "@mui/material/CircularProgress";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+
 import "./ProductoManager.css";
 
 interface Producto {
@@ -34,6 +35,7 @@ const ProductoManager = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<{ name?: string; category?: string }>({});
   const [openDialog, setOpenDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
@@ -102,28 +104,30 @@ const ProductoManager = () => {
   }, []);
 
   const handleOpenDialog = (producto?: Producto) => {
-    if (producto) {
-      setEditingProduct(producto);
-      setFormData({ ...producto });
-      setImagePreview(producto.image);
-    } else {
-      setEditingProduct(null);
-      setFormData({
-        name: "",
-        category: "",
-        description: "",
-        price: 0,
-        disponible: true,
-        image: "",
-      });
-      setImagePreview(null);
-    }
-    setOpenDialog(true);
-  };
+  setFormErrors({});
+  if (producto) {
+    setEditingProduct(producto);
+    setFormData({ ...producto });
+    setImagePreview(producto.image);
+  } else {
+    setEditingProduct(null);
+    setFormData({
+      name: "",
+      category: "",
+      description: "",
+      price: 0,
+      disponible: true,
+      image: "",
+    });
+    setImagePreview(null);
+  }
+  setOpenDialog(true);
+};
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingProduct(null);
+    setFormErrors({});
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -147,6 +151,16 @@ const ProductoManager = () => {
   };
 
   const handleSubmit = async () => {
+    const errors: { name?: string; category?: string } = {};
+
+    if (!formData.name.trim()) errors.name = "El nombre es obligatorio";
+    if (!formData.category.trim()) errors.category = "La categoría es obligatoria";
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
     try {
       if (editingProduct) {
         await axios.put(`${API_URL}/api/productos/${editingProduct._id}`, formData, axiosConfig);
@@ -178,7 +192,7 @@ const ProductoManager = () => {
   return (
     <div className="producto-manager">
       <div className="header">
-        <h2>📝GESTIÓN DE MENÚ</h2>
+        <h2><AddCircleIcon style={{ marginRight: "5px" }}/>GESTIÓN DE MENÚ</h2>
         <Button startIcon={<AddCircleIcon />} variant="contained" color="primary" onClick={() => handleOpenDialog()}>
           Nuevo Producto
         </Button>
@@ -223,8 +237,26 @@ const ProductoManager = () => {
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{editingProduct ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
         <DialogContent className="form-dialog">
-          <TextField label="Nombre" name="name" fullWidth value={formData.name} onChange={handleChange} placeholder="Ej: Sushi Salmón" />
-          <TextField label="Categoría" name="category" fullWidth value={formData.category} onChange={handleChange} placeholder="Ej: Rolls" />
+          <TextField
+            label="Nombre"
+            name="name"
+            fullWidth
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Ej: Sushi Salmón"
+            error={!!formErrors.name}
+            helperText={formErrors.name}
+          />
+          <TextField
+          label="Categoría"
+          name="category"
+          fullWidth
+          value={formData.category}
+          onChange={handleChange}
+          placeholder="Ej: Rolls"
+          error={!!formErrors.category}
+          helperText={formErrors.category}
+        />
           <TextField label="Descripción" name="description" fullWidth multiline value={formData.description} onChange={handleChange} placeholder="Ej: Con queso y palta" />
           <TextField label="Precio (ARS)" name="price" type="number" fullWidth value={formData.price} onChange={handleChange} placeholder="Ej: 2500" />
           <FormControlLabel control={<Checkbox checked={formData.disponible} onChange={(e) => setFormData(prev => ({ ...prev, disponible: e.target.checked }))} />} label="Producto disponible" />

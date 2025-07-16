@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import "./Dashboard.css";
-
+// Íconos MUI
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import InventoryIcon from "@mui/icons-material/Inventory";
 interface Pedido {
   _id: string;
   nombreCliente: string;
@@ -31,6 +33,7 @@ export const Dashboard = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [rol, setRol] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{ mensaje: string; tipo: "ok" | "error" } | null>(null);
+  const [mostrarDashboardCards, setMostrarDashboardCards] = useState(true); // 👈 NUEVO
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -146,48 +149,56 @@ export const Dashboard = () => {
 
   return (
     <div className="panel-content">
-      {/* DASHBOARD */}
-      <h2>📊DASHBOARD</h2>
-      <div className="dashboard-cards">
-        <div className="card">
-          <div className="card-label">⏳NUEVOS PEDIDOS</div>
-          <div className="card-number highlight-orange">{resumen.pendientes}</div>
+      {/* DASHBOARD COLLAPSABLE */}
+      <h2
+        className="titulo-dashboard"
+        onClick={() => setMostrarDashboardCards(!mostrarDashboardCards)}
+        style={{ cursor: "pointer", userSelect: "none" }}
+      >
+        {mostrarDashboardCards ? "▼" : "►"} <DashboardIcon style={{ marginRight: "5px" }}/>DASHBOARD
+      </h2>
+
+      {mostrarDashboardCards && (
+        <div className="dashboard-cards">
+          <div className="card">
+            <div className="card-label">⏳NUEVOS PEDIDOS</div>
+            <div className="card-number highlight-orange">{resumen.pendientes}</div>
+          </div>
+          <div className="card-separator">
+            <span className="desktop">|</span>
+            <span className="mobile">__</span>
+          </div>
+          <div className="card">
+            <div className="card-label">📦 PENDIENTE REPARTO</div>
+            <div className="card-number">{resumen.pendienteReparto}</div>
+          </div>
+          <div className="card">
+            <div className="card-label">🍱 PENDIENTE TAKEAWAY</div>
+            <div className="card-number">{resumen.pendienteTakeaway}</div>
+          </div>
+          <div className="card">
+            <div className="card-label">🛵 EN REPARTO (HOY)</div>
+            <div className="card-number">{resumen.enReparto}</div>
+          </div>
+          <div className="card">
+            <div className="card-label">📅TOTAL DEL DÍA</div>
+            <div className="card-number">{resumen.dia}</div>
+          </div>
+          <div className="card">
+            <div className="card-label">📈TOTAL DEL MES</div>
+            <div className="card-number highlight-blue">{resumen.totalMes}</div>
+          </div>
         </div>
-        {/* Separador */}
-        <div className="card-separator">
-          <span className="desktop">|</span>
-          <span className="mobile">___</span>
-        </div>
-        {/* DATOS DEL DASHBOARD */}
-        <div className="card">
-          <div className="card-label">📦 PENDIENTE REPARTO</div>
-          <div className="card-number">{resumen.pendienteReparto}</div>
-        </div>
-        <div className="card">
-          <div className="card-label">🍱 PENDIENTE TAKEAWAY</div>
-          <div className="card-number">{resumen.pendienteTakeaway}</div>
-        </div>
-        <div className="card">
-          <div className="card-label">🛵 EN REPARTO (HOY)</div>
-          <div className="card-number">{resumen.enReparto}</div>
-        </div>
-        <div className="card">
-          <div className="card-label">📅TOTAL DEL DÍA</div>
-          <div className="card-number">{resumen.dia}</div>
-        </div>
-        <div className="card">
-          <div className="card-label">📈TOTAL DEL MES</div>
-          <div className="card-number highlight-blue">{resumen.totalMes}</div>
-        </div>
-      </div>
-      {/* SNACKBAR DE CONFIRMACIÓN */}
+      )}
+
       {snackbar && (
         <div className={`snackbar ${snackbar.tipo === "ok" ? "snackbar-ok" : "snackbar-error"}`}>
           {snackbar.mensaje}
         </div>
       )}
-      {/* LISTADO DE PEDIDOS PARA HOY  */}
-      <h2>📦PEDIDOS PARA HOY</h2>
+
+      {/* PEDIDOS DEL DÍA */}
+      <h2><InventoryIcon style={{ marginRight: "5px" }}/>PEDIDOS PARA HOY</h2>
       <div className="pedidos-cards">
         {pedidos.map((pedido) => (
           <div className="pedido-card" key={pedido._id} data-estado={pedido.estado}>

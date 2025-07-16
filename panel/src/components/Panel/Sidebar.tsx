@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 import logo from "../../assets/FRESCO.png";
 // Íconos MUI
-import DashboardIcon from "@mui/icons-material/Dashboard";
+import HomeIcon from "@mui/icons-material/Home";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import AssessmentIcon from "@mui/icons-material/Assessment";
@@ -44,8 +44,8 @@ const Sidebar = () => {
 
         <nav className="sidebar-nav">
           <Link to="/panel/dashboard" onClick={() => setOpen(false)}>
-            <DashboardIcon className="sidebar-icon" />
-            DASHBOARD
+            <HomeIcon className="sidebar-icon" />
+            HOME
           </Link>
 
           {rol?.toLowerCase() === "owner" && (
