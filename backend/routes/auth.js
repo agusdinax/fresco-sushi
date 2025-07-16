@@ -7,12 +7,12 @@ require('dotenv').config();
 
 // Registro
 router.post('/register', async (req, res) => {
-  const { nombre, email, password, rol } = req.body;
+  const { nombre,userName, email, password, rol } = req.body;
   try {
-    const userExists = await Usuario.findOne({ email });
-    if (userExists) return res.status(400).json({ message: 'Email ya registrado' });
+    const userExists = await Usuario.findOne({ userName });
+    if (userExists) return res.status(400).json({ message: 'Usuario ya registrado' });
 
-    const usuario = new Usuario({ nombre, email, password, rol });
+    const usuario = new Usuario({ nombre, userName, email, password, rol });
     await usuario.save();
 
     const token = jwt.sign({ id: usuario._id, rol: usuario.rol }, process.env.JWT_SECRET, { expiresIn: '1d' });
@@ -29,12 +29,12 @@ router.post('/login', async (req, res) => {
   try {
     const usuario = await Usuario.findOne({ user });
     if (!usuario) {
-      return res.status(400).json({ message: 'Email o contraseña incorrectos' });
+      return res.status(400).json({ message: 'Usuario o contraseña incorrectos' });
     }
 
     const isMatch = await usuario.matchPassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Email o contraseña incorrectos' });
+      return res.status(400).json({ message: 'Usuario o contraseña incorrectos' });
     }
 
     const token = jwt.sign(
