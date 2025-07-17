@@ -45,10 +45,14 @@ router.post('/', protect, restrictTo('owner'), upload.single("image"), async (re
 // ✅ Obtener todos los productos (público)
 router.get('/', async (req, res) => {
   try {
-    const productos = await Producto.find().sort({ fechaCreacion: -1 });
-    res.json(productos);
+    const productos = await Producto.find().lean();
+    const productosConId = productos.map(p => ({
+      ...p,
+      id: p._id.toString(), 
+    }));
+    res.json(productosConId);
   } catch (error) {
-    res.status(500).json({ message: 'Error al obtener productos' });
+    res.status(500).json({ message: "Error al obtener productos" });
   }
 });
 

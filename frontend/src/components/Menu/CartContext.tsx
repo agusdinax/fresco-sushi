@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useRef } from "react";
 
 export interface Product {
   id: string;
@@ -31,35 +31,44 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const lastAddTimestamp = useRef(0);
 
   const addToCart = (product: Product) => {
+    const now = Date.now();
+
+    // Si la última llamada fue hace menos de 300ms, ignorar
+    if (now - lastAddTimestamp.current < 300) {
+      // Opcional: console.log("Ignorado click rápido");
+      return;
+    }
+
+    lastAddTimestamp.current = now;
+
     setCart((prev) => {
-      const existingIndex = prev.findIndex(item => item.product.id === product.id);
+      const existingIndex = prev.findIndex((item) => item.product.id === product.id);
+      let newCart;
+
       if (existingIndex !== -1) {
-        // Ya está, aumentar cantidad
-        const updated = [...prev];
-        updated[existingIndex].qty += 1;
-        return updated;
+        newCart = [...prev];
+        newCart[existingIndex].qty += 1;
       } else {
-        // Nuevo producto
-        return [...prev, { product, qty: 1 }];
+        newCart = [...prev, { product, qty: 1 }];
       }
+      return newCart;
     });
   };
 
   const removeFromCart = (productId: string) => {
     setCart((prev) => {
-      const existingIndex = prev.findIndex(item => item.product.id === productId);
+      const existingIndex = prev.findIndex((item) => item.product.id === productId);
       if (existingIndex !== -1) {
         const updated = [...prev];
         if (updated[existingIndex].qty > 1) {
           updated[existingIndex].qty -= 1;
-          return updated;
         } else {
-          // Quitar producto si qty = 1
           updated.splice(existingIndex, 1);
-          return updated;
         }
+        return updated;
       }
       return prev;
     });

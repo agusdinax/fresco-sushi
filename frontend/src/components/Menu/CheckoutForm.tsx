@@ -1,11 +1,19 @@
 import { useState } from "react";
-import { useCart} from "../Menu/CartContext";
+import { useCart } from "../Menu/CartContext";
 import { FiPlus, FiMinus } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import "./checkoutForm.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const NUM_WHATSAPP = import.meta.env.VITE_WHATSAPP;
+
+// Función para formatear en pesos argentinos
+const formatARS = (value: number) =>
+  new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 0,
+  }).format(value);
 
 interface CheckoutFormProps {
   isOpen: boolean;
@@ -20,21 +28,31 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
   const [nombreCliente, setNombreCliente] = useState("");
   const [telefono, setTelefono] = useState("");
 
-  // Ya cart es array de {product, qty}
-  const total = cart.reduce((sum, item) => sum + item.product.price * item.qty, 0);
+  // Total calculado
+  const total = cart.reduce(
+    (sum, item) => sum + item.product.price * item.qty,
+    0
+  );
 
   const handleSend = async () => {
     const items = cart
-      .map((item) => `- ${item.product.name} x${item.qty} ($${item.product.price * item.qty})`)
+      .map(
+        (item) =>
+          `- ${item.product.name} x${item.qty} (${formatARS(
+            item.product.price * item.qty
+          )})`
+      )
       .join("\n");
 
     const msg =
       `Hola, quisiera ${isOpen ? "hacer un pedido" : "programar un pedido"} de sushi:\n\n` +
       `*Pedido:*\n${items}\n\n` +
-      `*Total:* $${total}\n` +
+      `*Total:* ${formatARS(total)}\n` +
       `*Tipo de entrega:* ${type === "delivery" ? "Delivery" : "Take Away"}\n` +
       (type === "delivery" ? `*Dirección:* ${address}\n` : "") +
-      `*Método de pago:* ${payment === "efectivo" ? "Efectivo" : "Transferencia"}\n` +
+      `*Método de pago:* ${
+        payment === "efectivo" ? "Efectivo" : "Transferencia"
+      }\n` +
       `*Comentario:* ${comment || "Sin comentarios"}\n` +
       `*Cliente:* ${nombreCliente}\n` +
       `*Teléfono:* ${telefono}`;
@@ -69,7 +87,7 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         return;
       }
 
-      // Abrir WhatsApp
+      // Abrir WhatsApp con el mensaje formateado
       const encodedMsg = encodeURIComponent(msg);
       window.open(`https://wa.me/${NUM_WHATSAPP}?text=${encodedMsg}`, "_blank");
     } catch (error) {
@@ -83,7 +101,10 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
       <h3>🛒 Mi pedido</h3>
 
       {!isOpen && (
-        <div className="closed-warning" style={{ marginBottom: "1rem", color: "red" }}>
+        <div
+          className="closed-warning"
+          style={{ marginBottom: "1rem", color: "red" }}
+        >
           ⚠️ Nos encontramos cerrados. Podés <strong>programar tu pedido</strong>.
         </div>
       )}
@@ -92,25 +113,31 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         <p className="empty-cart">El carrito está vacío.</p>
       ) : (
         <ul className="checkout-items">
-        {cart.map((item) => (
-          <li key={item.product.id} className="checkout-item">
-            <span>{item.product.name}</span>
-            <div className="item-controls">
-              <button onClick={() => removeFromCart(item.product.id)} title="Quitar uno">
-                <FiMinus />
-              </button>
-              <span>{item.qty}</span>
-              <button onClick={() => addToCart(item.product)} title="Agregar uno">
-                <FiPlus />
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+          {cart.map((item) => (
+            <li key={item.product.id} className="checkout-item">
+              <span>{item.product.name}</span>
+              <div className="item-controls">
+                <button
+                  onClick={() => removeFromCart(item.product.id)}
+                  title="Quitar uno"
+                >
+                  <FiMinus />
+                </button>
+                <span>{item.qty}</span>
+                <button
+                  onClick={() => addToCart(item.product)}
+                  title="Agregar uno"
+                >
+                  <FiPlus />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
       <p className="checkout-total">
-        <strong>Total: ${total}</strong>
+        <strong>Total: {formatARS(total)}</strong>
       </p>
 
       <form
@@ -123,7 +150,6 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
           handleSend();
         }}
       >
-        {/* Resto del formulario igual que antes */}
         <fieldset>
           <legend>Tipo de entrega:</legend>
           <label>

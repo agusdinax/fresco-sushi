@@ -24,7 +24,6 @@ export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: Product
     return () => clearTimeout(timer);
   }, [quantity]);
 
-  // Puede agregar sólo si stock general y producto disponible
   const canAddToCart = stockGeneralActivo && product.disponible !== false;
 
   return (
@@ -36,14 +35,18 @@ export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: Product
       )}
       <h4>{product.name}</h4>
       <p>{product.description}</p>
-      <span>${product.price}</span>
+      <span>
+        {new Intl.NumberFormat('es-AR', {
+          style: 'currency',
+          currency: 'ARS',
+          minimumFractionDigits: 0,
+        }).format(product.price)}
+      </span>
 
       {quantity === 0 ? (
         <button
-          onClick={() => canAddToCart && addToCart(product)}
+           onClick={() => canAddToCart && addToCart(product)}
           disabled={!canAddToCart}
-          title={!canAddToCart ? "No hay stock disponible" : ""}
-          style={{ cursor: canAddToCart ? "pointer" : "not-allowed" }}
         >
           <FiShoppingCart />
           Agregar al carrito
@@ -51,24 +54,17 @@ export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: Product
       ) : (
         <>
           <div className="product-card__actions">
-            <button
-              onClick={() => removeFromCart(product.id)}
-              title="Quitar uno"
-              style={{ cursor: "pointer" }}
-            >
+            <button onClick={() => removeFromCart(product.id)}>
               <FiMinus />
             </button>
             <span className="product-card__qty">Cantidad: {quantity}</span>
             <button
               onClick={() => canAddToCart && addToCart(product)}
               disabled={!canAddToCart}
-              title={!canAddToCart ? "No hay stock disponible" : ""}
-              style={{ cursor: canAddToCart ? "pointer" : "not-allowed" }}
             >
               <FiPlus />
             </button>
           </div>
-
           {showFinalize && (
             <button className="finalize-btn delayed" onClick={onFinalize}>
               Finalizar compra

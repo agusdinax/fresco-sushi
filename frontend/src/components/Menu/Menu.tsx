@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { ProductCard } from "./ProductCard";
+import  {ProductCard }from "./ProductCard";
 import { CategorySelector } from "./CategorySelector";
 import "./menu.css";
 import type { Product } from "../Menu/CartContext";
@@ -23,20 +23,17 @@ export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [stockGeneralActivo, setStockGeneralActivo] = useState<boolean>(true);
 
-  // Cargar productos + categorías desde API
   const fetchProductos = async () => {
     try {
       const res = await axios.get<Product[]>(`${API_URL}/api/productos`);
       const disponibles = res.data.filter(p => p.disponible !== false);
       setProductos(disponibles);
 
-      // Extraer categorías únicas
       const cats = Array.from(
         new Set(disponibles.map(p => p.category))
       ).map(c => ({ key: c, label: c.charAt(0).toUpperCase() + c.slice(1) }));
       setCategorias(cats);
 
-      // Seleccionar categoría por defecto
       if (!selectedCategory || !cats.find(c => c.key === selectedCategory)) {
         setSelectedCategory(cats[0]?.key || "");
       }
@@ -45,7 +42,6 @@ export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
     }
   };
 
-  // Cargar estado de stock general
   const fetchStockGeneral = async () => {
     try {
       const res = await axios.get<{ stockGeneralActivo: boolean }>(
@@ -65,7 +61,7 @@ export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
     const interval = setInterval(() => {
       fetchProductos();
       fetchStockGeneral();
-    }, 5 * 60 * 1000); // cada 5 minutos
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
