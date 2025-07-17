@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useCart } from "./CartContext";
+import { useCart, type Product } from "../Menu/CartContext";
 import { FiPlus, FiMinus } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import "./checkoutForm.css";
+
 const API_URL = import.meta.env.VITE_API_URL;
 const NUM_WHATSAPP = import.meta.env.VITE_WHATSAPP;
 
@@ -19,19 +20,19 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
   const [nombreCliente, setNombreCliente] = useState("");
   const [telefono, setTelefono] = useState("");
 
-  // Agrupar productos
+  // Agrupar productos por id
   const grouped = cart.reduce((acc, item) => {
     acc[item.id] = acc[item.id]
       ? { ...acc[item.id], qty: acc[item.id].qty + 1 }
       : { ...item, qty: 1 };
     return acc;
-  }, {} as Record<number, (typeof cart)[number] & { qty: number }>);
+  }, {} as Record<string, (typeof cart)[number] & { qty: number }>);
 
   const total = cart.reduce((sum, p) => sum + p.price, 0);
 
   const handleSend = async () => {
     const items = Object.values(grouped)
-      .map(p => `- ${p.name} x${p.qty} ($${p.price * p.qty})`)
+      .map((p) => `- ${p.name} x${p.qty} ($${p.price * p.qty})`)
       .join("\n");
 
     const msg =
@@ -48,7 +49,7 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
     const pedidoPayload = {
       nombreCliente,
       telefono,
-      productos: Object.values(grouped).map(p => ({
+      productos: Object.values(grouped).map((p) => ({
         id: p.id,
         producto: p.name,
         cantidad: p.qty,
@@ -58,15 +59,13 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
       comentario: comment,
       metodoPago: payment,
       tipoEntrega: type,
-      address,    
+      address,
     };
 
     try {
       const response = await fetch(`${API_URL}/api/pedidos/publico`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pedidoPayload),
       });
 
@@ -100,7 +99,7 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         <p className="empty-cart">El carrito está vacío.</p>
       ) : (
         <ul className="checkout-items">
-          {Object.values(grouped).map(item => (
+          {Object.values(grouped).map((item) => (
             <li key={item.id} className="checkout-item">
               <span>{item.name}</span>
               <div className="item-controls">
@@ -117,118 +116,122 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         </ul>
       )}
 
-      <p className="checkout-total"><strong>Total: ${total}</strong></p>
-<form
-  onSubmit={(e) => {
-    e.preventDefault();
-    if (!nombreCliente || !telefono) {
-      alert("Por favor completá tu nombre y teléfono.");
-      return;
-    }
-    handleSend();
-  }}
->
-  <fieldset>
-    <legend>Tipo de entrega:</legend>
-    <label>
-      <input
-        type="radio"
-        name="type"
-        value="delivery"
-        checked={type === "delivery"}
-        onChange={() => setType("delivery")}
-      />
-      Delivery
-    </label>
-    <label>
-      <input
-        type="radio"
-        name="type"
-        value="takeaway"
-        checked={type === "takeaway"}
-        onChange={() => setType("takeaway")}
-      />
-      Take Away
-    </label>
-  </fieldset>
+      <p className="checkout-total">
+        <strong>Total: ${total}</strong>
+      </p>
 
-  {type === "delivery" && (
-    <fieldset>
-      <legend>Dirección para entrega:</legend>
-      <input
-        type="text"
-        placeholder="Dirección"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-        required
-      />
-    </fieldset>
-  )}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!nombreCliente || !telefono) {
+            alert("Por favor completá tu nombre y teléfono.");
+            return;
+          }
+          handleSend();
+        }}
+      >
+        <fieldset>
+          <legend>Tipo de entrega:</legend>
+          <label>
+            <input
+              type="radio"
+              name="type"
+              value="delivery"
+              checked={type === "delivery"}
+              onChange={() => setType("delivery")}
+            />
+            Delivery
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="type"
+              value="takeaway"
+              checked={type === "takeaway"}
+              onChange={() => setType("takeaway")}
+            />
+            Take Away
+          </label>
+        </fieldset>
 
-  <fieldset>
-    <legend>Método de pago:</legend>
-    <label>
-      <input
-        type="radio"
-        name="payment"
-        value="efectivo"
-        checked={payment === "efectivo"}
-        onChange={() => setPayment("efectivo")}
-      />
-      Efectivo
-    </label>
-    <label>
-      <input
-        type="radio"
-        name="payment"
-        value="transferencia"
-        checked={payment === "transferencia"}
-        onChange={() => setPayment("transferencia")}
-      />
-      Transferencia
-    </label>
-  </fieldset>
+        {type === "delivery" && (
+          <fieldset>
+            <legend>Dirección para entrega:</legend>
+            <input
+              type="text"
+              placeholder="Dirección"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+            />
+          </fieldset>
+        )}
 
-  <fieldset>
-    <legend>Datos del cliente:</legend>
-    <label>
-      Nombre:
-      <input
-        type="text"
-        placeholder="Tu nombre"
-        value={nombreCliente}
-        onChange={(e) => setNombreCliente(e.target.value)}
-        required
-      />
-    </label>
-  </fieldset>
-  <fieldset>
-    <label>
-      Teléfono:
-      <input
-        type="text"
-        placeholder="Tu teléfono"
-        value={telefono}
-        onChange={(e) => setTelefono(e.target.value)}
-        required
-      />
-    </label>
-  </fieldset>
+        <fieldset>
+          <legend>Método de pago:</legend>
+          <label>
+            <input
+              type="radio"
+              name="payment"
+              value="efectivo"
+              checked={payment === "efectivo"}
+              onChange={() => setPayment("efectivo")}
+            />
+            Efectivo
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="payment"
+              value="transferencia"
+              checked={payment === "transferencia"}
+              onChange={() => setPayment("transferencia")}
+            />
+            Transferencia
+          </label>
+        </fieldset>
 
-  <fieldset>
-    <legend>Agregar un comentario:</legend>
-    <textarea
-      placeholder="Comentario"
-      value={comment}
-      onChange={(e) => setComment(e.target.value)}
-    />
-  </fieldset>
+        <fieldset>
+          <legend>Datos del cliente:</legend>
+          <label>
+            Nombre:
+            <input
+              type="text"
+              placeholder="Tu nombre"
+              value={nombreCliente}
+              onChange={(e) => setNombreCliente(e.target.value)}
+              required
+            />
+          </label>
+        </fieldset>
 
-  <button type="submit" disabled={cart.length === 0}>
-    <FaWhatsapp className="whatsapp-icon1" />
-    {isOpen ? "Enviar pedido por WhatsApp" : "Programar pedido"}
-   </button>
-    </form>
+        <fieldset>
+          <label>
+            Teléfono:
+            <input
+              type="text"
+              placeholder="Tu teléfono"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              required
+            />
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Agregar un comentario:</legend>
+          <textarea
+            placeholder="Comentario"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+        </fieldset>
+
+        <button type="submit" disabled={cart.length === 0}>
+          <FaWhatsapp className="whatsapp-icon1" />
+          {isOpen ? "Enviar pedido por WhatsApp" : "Programar pedido"}
+        </button>
+      </form>
     </div>
   );
 };

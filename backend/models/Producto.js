@@ -20,7 +20,7 @@ const ProductoSchema = new mongoose.Schema({
     required: true
   },
   image: {
-    type: String, // Podés guardar una URL o path de imagen
+    type: String, 
     trim: true
   },
   disponible: {
@@ -32,7 +32,5 @@ const ProductoSchema = new mongoose.Schema({
     default: Date.now
   }, 
 });
-
-// El campo `id` no hace falta definirlo, MongoDB ya asigna _id automáticamente
 
 module.exports = mongoose.model('Producto', ProductoSchema);

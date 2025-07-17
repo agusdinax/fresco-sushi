@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
-import { useCart } from "./CartContext";
-import type { Product } from "../../data/menuData";
+import { useCart, type Product } from "../Menu/CartContext";
 import { FiShoppingCart, FiPlus, FiMinus } from "react-icons/fi";
 
-export const ProductCard = ({
-  product,
-  onFinalize,
-}: {
+interface ProductCardProps {
   product: Product;
   onFinalize: () => void;
-}) => {
+  stockGeneralActivo: boolean;
+}
+
+export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: ProductCardProps) => {
   const { cart, addToCart, removeFromCart } = useCart();
   const quantity = cart.filter((p) => p.id === product.id).length;
   const [showFinalize, setShowFinalize] = useState(false);
@@ -24,6 +23,9 @@ export const ProductCard = ({
     return () => clearTimeout(timer);
   }, [quantity]);
 
+  // No permitir agregar si stock general está desactivado
+  const canAddToCart = stockGeneralActivo && product.disponible !== false;
+
   return (
     <div className="product-card">
       <img src={product.image} alt={product.name} />
@@ -32,7 +34,11 @@ export const ProductCard = ({
       <span>${product.price}</span>
 
       {quantity === 0 ? (
-        <button onClick={() => addToCart(product)}>
+        <button
+          onClick={() => canAddToCart && addToCart(product)}
+          disabled={!canAddToCart}
+          title={!canAddToCart ? "No hay stock disponible" : ""}
+        >
           <FiShoppingCart />
           Agregar al carrito
         </button>
@@ -43,7 +49,11 @@ export const ProductCard = ({
               <FiMinus />
             </button>
             <span className="product-card__qty">Cantidad: {quantity}</span>
-            <button onClick={() => addToCart(product)}>
+            <button
+              onClick={() => canAddToCart && addToCart(product)}
+              disabled={!canAddToCart}
+              title={!canAddToCart ? "No hay stock disponible" : ""}
+            >
               <FiPlus />
             </button>
           </div>
