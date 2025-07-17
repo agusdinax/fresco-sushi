@@ -4,6 +4,8 @@ import { FiPlus, FiMinus } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { TextField } from "@mui/material";
 import "./checkoutForm.css";
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import WarningIcon from '@mui/icons-material/Warning';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const NUM_WHATSAPP = import.meta.env.VITE_WHATSAPP;
@@ -89,11 +91,11 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
 
   return (
     <div className="checkout-form">
-      <h3>🛒 Mi pedido</h3>
+      <h3><ShoppingCartIcon/>Mi pedido</h3>
 
       {!isOpen && (
         <div className="closed-warning">
-          ⚠️ Nos encontramos cerrados. Podés <strong>programar tu pedido</strong>.
+          <WarningIcon/> Nos encontramos cerrados. Podés <strong>programar tu pedido</strong>.
         </div>
       )}
 

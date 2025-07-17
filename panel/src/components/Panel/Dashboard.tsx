@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { TextField, MenuItem } from "@mui/material";
+import { TextField, MenuItem, Box } from "@mui/material";
 import "./Dashboard.css";
+import { Typography } from "@mui/material";
 // Íconos MUI
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import InventoryIcon from "@mui/icons-material/Inventory";
@@ -150,15 +151,25 @@ export const Dashboard = () => {
 
   return (
     <div className="panel-content">
-      {/* DASHBOARD COLLAPSABLE */}
-      <h2
-        className="titulo-dashboard"
-        onClick={() => setMostrarDashboardCards(!mostrarDashboardCards)}
-        style={{ cursor: "pointer", userSelect: "none" }}
-      >
-        {mostrarDashboardCards ? "▼" : "►"} <DashboardIcon style={{ marginRight: "5px" }}/>DASHBOARD
-      </h2>
-
+      <Box
+      onClick={() => setMostrarDashboardCards(!mostrarDashboardCards)}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        userSelect: 'none',
+        gap: 1, // espacio entre ícono y texto
+        mb: 2,
+      }}
+    >
+      <span style={{ fontSize: '1.2rem' }}>
+        {mostrarDashboardCards ? '▼' : '►'}
+      </span>
+      <DashboardIcon />
+      <Typography variant="h4" component="span">
+        DASHBOARD
+      </Typography>
+    </Box>
       {mostrarDashboardCards && (
         <div className="dashboard-cards">
           <div className="card">
@@ -199,7 +210,9 @@ export const Dashboard = () => {
       )}
 
       {/* PEDIDOS DEL DÍA */}
-      <h2><InventoryIcon style={{ marginRight: "5px" }}/>PEDIDOS PARA HOY</h2>
+      <Typography variant="h4" mb={2}>
+        <InventoryIcon/>PEDIDOS PARA HOY
+      </Typography>
       <div className="pedidos-cards">
         {pedidos.map((pedido) => (
           <div className="pedido-card" key={pedido._id} data-estado={pedido.estado}>

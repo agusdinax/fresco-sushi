@@ -1,121 +1,316 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
-import dayjs from "dayjs";
-import "dayjs/locale/es";
-dayjs.locale("es");
+import AssessmentIcon from "@mui/icons-material/Assessment";
 
-const colores = ["#00C49F", "#FF8042", "#FFBB28", "#8884d8", "#ff6384"];
+const API_URL = import.meta.env.VITE_API_URL;
+const token = localStorage.getItem("token");
 
-interface Pedido {
-  fecha: string;
-  tipoEntrega: string;
-  metodoPago: string;
-  items: { nombre: string }[];
+interface Producto {
+  producto: string;
+  cantidad: number;
+  precio: number;
+  _id: string;
 }
 
-const Reportes = () => {
+interface Pedido {
+  _id: string;
+  nombreCliente: string;
+  telefono: string;
+  productos: Producto[];
+  total: number;
+  estado: string;
+  fechaPedido: string;
+  metodoPago: "efectivo" | "transferencia";
+  tipoEntrega: "delivery" | "takeaway";
+}
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+const Reportes: React.FC = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [mesSeleccionado, setMesSeleccionado] = useState(dayjs().month() + 1); // 1 a 12
-
-  const token = localStorage.getItem("token");
-
-  const obtenerPedidos = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setPedidos(data);
-  };
+  const [periodo, setPeriodo] = useState<"dia" | "semana" | "mes">("mes");
 
   useEffect(() => {
+    async function obtenerPedidos() {
+      try {
+        const res = await fetch(`${API_URL}/api/pedidos`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Error al obtener pedidos");
+        const data = await res.json();
+        setPedidos(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
     obtenerPedidos();
   }, []);
 
-  const pedidosFiltrados = pedidos.filter((p) =>
-    dayjs(p.fecha).month() + 1 === Number(mesSeleccionado)
-  );
+  const filtrarPedidos = () => {
+    const ahora = new Date();
+    return pedidos.filter((p) => {
+      const fecha = new Date(p.fechaPedido);
+      if (isNaN(fecha.getTime())) return false;
 
-  const totalPorTipoEntrega = pedidosFiltrados.reduce((acc: any, p) => {
-    acc[p.tipoEntrega] = (acc[p.tipoEntrega] || 0) + 1;
-    return acc;
-  }, {});
+      if (periodo === "dia") {
+        return (
+          fecha.getDate() === ahora.getDate() &&
+          fecha.getMonth() === ahora.getMonth() &&
+          fecha.getFullYear() === ahora.getFullYear()
+        );
+      }
+      if (periodo === "semana") {
+        const unaSemanaAtras = new Date();
+        unaSemanaAtras.setDate(ahora.getDate() - 7);
+        return fecha >= unaSemanaAtras && fecha <= ahora;
+      }
+      if (periodo === "mes") {
+        return (
+          fecha.getMonth() === ahora.getMonth() &&
+          fecha.getFullYear() === ahora.getFullYear()
+        );
+      }
+      return true;
+    });
+  };
 
-  const totalPorMetodoPago = pedidosFiltrados.reduce((acc: any, p) => {
-    acc[p.metodoPago] = (acc[p.metodoPago] || 0) + 1;
-    return acc;
-  }, {});
+  const pedidosFiltrados = filtrarPedidos();
 
-  const opcionesContadas = pedidosFiltrados.flatMap((p) =>
-    Array.isArray(p.items) ? p.items.map((i) => i.nombre) : []
-  );
+  // Inicializo los contadores
+  const totalPorMetodoPago = { efectivo: 0, transferencia: 0 };
+  const totalPorTipoEntrega = { delivery: 0, takeaway: 0 };
 
-  const conteoOpciones: Record<string, number> = {};
-  opcionesContadas.forEach((nombre) => {
-    conteoOpciones[nombre] = (conteoOpciones[nombre] || 0) + 1;
+  pedidosFiltrados.forEach((pedido) => {
+    // Sumar método de pago
+    if (pedido.metodoPago === "efectivo") totalPorMetodoPago.efectivo++;
+    else if (pedido.metodoPago === "transferencia") totalPorMetodoPago.transferencia++;
+
+    // Sumar tipo de entrega
+    if (pedido.tipoEntrega === "delivery") totalPorTipoEntrega.delivery++;
+    else if (pedido.tipoEntrega === "takeaway") totalPorTipoEntrega.takeaway++;
   });
 
-  const dataOpciones = Object.entries(conteoOpciones)
-    .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+  // Contar productos vendidos
+  const productosContados: Record<string, { nombre: string; cantidad: number }> = {};
+
+  pedidosFiltrados.forEach((pedido) => {
+    pedido.productos.forEach((prod) => {
+      if (!productosContados[prod.producto]) {
+        productosContados[prod.producto] = { nombre: prod.producto, cantidad: 0 };
+      }
+      productosContados[prod.producto].cantidad += prod.cantidad;
+    });
+  });
+
+  const productoMasPedido = Object.values(productosContados).sort(
+    (a, b) => b.cantidad - a.cantidad
+  )[0];
+
+  const totalProductos = Object.values(productosContados).reduce(
+    (acc, p) => acc + p.cantidad,
+    0
+  );
+
+  const totalIngresos = pedidosFiltrados.reduce((acc, pedido) => {
+    return acc + (pedido.total || 0);
+  }, 0);
+
+  // Datos para los gráficos Pie
+  const dataPiePago = [
+    { name: "Efectivo", value: totalPorMetodoPago.efectivo },
+    { name: "Transferencia", value: totalPorMetodoPago.transferencia },
+  ];
+
+  const dataPieEntrega = [
+    { name: "Delivery", value: totalPorTipoEntrega.delivery },
+    { name: "Takeaway", value: totalPorTipoEntrega.takeaway },
+  ];
+
+  // Top 5 productos más pedidos para BarChart
+  const dataTopProductos = Object.values(productosContados)
     .sort((a, b) => b.cantidad - a.cantidad)
-    .slice(0, 5); // top 5
+    .slice(0, 5);
 
   return (
-    <div className="reportes-panel">
-      <div className="filtros">
-        <label>Mes:</label>
-        <select value={mesSeleccionado} onChange={(e) => setMesSeleccionado(Number(e.target.value))}>
-          {[...Array(12)].map((_, i) => (
-            <option key={i} value={i + 1}>{dayjs().month(i).format("MMMM")}</option>
-          ))}
-        </select>
-      </div>
+    <Box p={3}>
+      <Typography variant="h4" mb={2}>
+        <AssessmentIcon/>REPORTES
+      </Typography>
 
-      <div className="graficos-container">
-        <div className="grafico">
-          <h3>Tipo de entrega</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={Object.entries(totalPorTipoEntrega).map(([tipo, cantidad]) => ({
-                name: tipo, value: cantidad
-              }))} dataKey="value" nameKey="name" outerRadius={80} label>
-                {Object.keys(totalPorTipoEntrega).map((_, index) => (
-                  <Cell key={index} fill={colores[index % colores.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+      <FormControl sx={{ mb: 3, width: 200 }}>
+        <InputLabel>Filtrar por</InputLabel>
+        <Select
+          value={periodo}
+          onChange={(e) => setPeriodo(e.target.value as any)}
+          label="Filtrar por"
+        >
+          <MenuItem value="dia">Hoy</MenuItem>
+          <MenuItem value="semana">Últimos 7 días</MenuItem>
+          <MenuItem value="mes">Este mes</MenuItem>
+        </Select>
+      </FormControl>
 
-        <div className="grafico">
-          <h3>Método de pago</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={Object.entries(totalPorMetodoPago).map(([metodo, cantidad]) => ({
-              metodo, cantidad
-            }))}>
-              <XAxis dataKey="metodo" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="cantidad" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <Box display="flex" gap={2} flexWrap="wrap">
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography variant="h6">Total pedidos</Typography>
+            <Typography variant="h5">{pedidosFiltrados.length}</Typography>
+          </CardContent>
+        </Card>
 
-        <div className="grafico">
-          <h3>Top 5 opciones más pedidas</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={dataOpciones}>
-              <XAxis dataKey="nombre" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="cantidad" fill="#ff6384" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography variant="h6">Producto más pedido</Typography>
+            <Typography variant="h5">
+              {productoMasPedido?.nombre ?? "Sin datos"}
+            </Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography variant="h6">Total productos vendidos</Typography>
+            <Typography variant="h5">{totalProductos}</Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography variant="h6">Delivery</Typography>
+            <Typography variant="h5">{totalPorTipoEntrega.delivery}</Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography variant="h6">Takeaway</Typography>
+            <Typography variant="h5">{totalPorTipoEntrega.takeaway}</Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography variant="h6">Pagos en efectivo</Typography>
+            <Typography variant="h5">{totalPorMetodoPago.efectivo}</Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography variant="h6">Transferencias</Typography>
+            <Typography variant="h5">{totalPorMetodoPago.transferencia}</Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography variant="h6">Ingresos estimados</Typography>
+            <Typography variant="h5">
+              ${totalIngresos.toLocaleString("es-AR")}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+
+      {/* Gráficos Pie */}
+      <Box mt={4} display="flex" gap={4} flexWrap="wrap">
+        <Card sx={{ flex: 1, minWidth: 300 }}>
+          <CardContent>
+            <Typography variant="h6" mb={2}>
+              Método de Pago
+            </Typography>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={dataPiePago}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={80}
+                  label
+                >
+                  {dataPiePago.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Legend />
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ flex: 1, minWidth: 300 }}>
+          <CardContent>
+            <Typography variant="h6" mb={2}>
+              Tipo de Entrega
+            </Typography>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={dataPieEntrega}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={80}
+                  label
+                >
+                  {dataPieEntrega.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[(index + 2) % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Legend />
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </Box>
+
+      {/* Top productos */}
+      <Box mt={4}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" mb={2}>
+              🥢 Top 5 Productos más pedidos
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dataTopProductos}>
+                <XAxis dataKey="nombre" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="cantidad" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   );
 };
 

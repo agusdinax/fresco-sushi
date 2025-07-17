@@ -10,7 +10,7 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import "./ListaPedidos.css";
 import InventoryIcon from "@mui/icons-material/Inventory";
-
+import { Typography } from "@mui/material";
 dayjs.extend(isBetween);
 dayjs.locale("es");
 
@@ -136,8 +136,9 @@ export const ListaPedidos = () => {
 
   return (
     <div className="contenedor-lista">
-      <h2 className="titulo-lista"><InventoryIcon/>HISTORIAL DE PEDIDOS</h2>
-
+      <Typography variant="h4" mb={2}>
+        <InventoryIcon/>HISTORIAL DE PEDIDOS
+      </Typography>
       <div className="filtros">
   <TextField
     label="Buscar por cliente"

@@ -68,7 +68,7 @@ export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
 
   return (
     <div className="menu-container">
-      <h2 className="h2menu">🍣 MENÚ</h2>
+      <h2 className="h2menu">MENÚ</h2>
 
       <CategorySelector
         categories={categorias}

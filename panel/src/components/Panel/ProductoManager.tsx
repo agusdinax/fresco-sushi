@@ -17,6 +17,7 @@ import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 
 import "./ProductoManager.css";
+import { Typography } from "@mui/material";
 
 interface Producto {
   _id: string;
@@ -191,7 +192,9 @@ const ProductoManager = () => {
   return (
     <div className="producto-manager">
       <div className="header">
-        <h2><AddCircleIcon style={{ marginRight: "5px" }}/>GESTIÓN DE MENÚ</h2>
+           <Typography variant="h4" mb={2}>
+                <AddCircleIcon/>GESTIÓN DEL MENÚ
+            </Typography>
         <Button startIcon={<AddCircleIcon />} variant="contained" color="primary" onClick={() => handleOpenDialog()}>
           Nuevo Producto
         </Button>
@@ -212,13 +215,11 @@ const ProductoManager = () => {
           {productos.map(producto => (
             <div className="producto-card" key={producto._id}>
               <img src={producto.image} alt={producto.name} />
-              <h3>{producto.name}</h3>
+              <h2>{producto.name}</h2>
               <p>{producto.description}</p>
-              <p>
-                <strong>
+              <h3>
                   {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0 }).format(producto.price)}
-                </strong>
-              </p>
+              </h3>
               <span className={`estado-producto ${producto.disponible ? "disponible" : "no-disponible"}`}>
                 {producto.disponible ? "Disponible" : "No disponible"}
               </span>
