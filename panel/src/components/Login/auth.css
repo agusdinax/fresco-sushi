@@ -3,9 +3,12 @@
   margin: 4rem auto;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   background-color: var(--color-white);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .auth-logo {
@@ -13,27 +16,20 @@
   margin-bottom: 1rem;
 }
 
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  text-align: left;
-}
-
-.auth-form label {
-  font-weight: bold;
-  font-size: 0.95rem;
-
+.h2title {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
   color: var(--color-contrast);
 }
 
-.auth-form input {
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.auth-form button {
+.auth-form button.login-button {
   background-color: var(--color-primary);
   color: var(--color-white);
   border: none;
@@ -42,16 +38,17 @@
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  margin-top: 0.5rem;
+  font-size: 1rem;
 }
 
-.auth-form button:hover {
+.auth-form button.login-button:hover {
   background-color: var(--color-hover);
 }
 
 .auth-link {
-  margin-top: 1rem;
+  margin-top: 1.2rem;
   font-size: 1rem;
+  color: var(--color-contrast);
 }
 
 .auth-link a {
@@ -60,40 +57,10 @@
   font-weight: bold;
 }
 
-.auth-form label {
-  font-weight: bold;
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
-  color: var(--color-contrast);
-}
-.input-group {
-  position: relative;
-  display: flex;
-  align-items: center;
+.auth-link a:hover {
+  text-decoration: underline;
 }
 
-.input-icon {
-  position: absolute;
-  left: 12px;
-  color: var(--color-primary);
-  pointer-events: none;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 0.75rem 0.75rem 0.75rem 2.5rem; /* espacio para icono */
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  box-sizing: border-box;
-}
-
-.input-group input::placeholder {
-  color: #aaa;
-}
-.h2title {
-  font-size: 1.5rem;
-}
 /* Responsive */
 @media (max-width: 480px) {
   .auth-container {
@@ -105,16 +72,11 @@
     width: 60px;
   }
 
-  .auth-form input {
-    font-size: 0.95rem;
-  }
-
-  .auth-form button {
-    font-size: 0.95rem;
-  }
-
-  h2 {
+  .h2title {
     font-size: 1.3rem;
   }
 
+  .auth-form button.login-button {
+    font-size: 0.95rem;
+  }
 }

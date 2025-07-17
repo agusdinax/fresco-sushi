@@ -2,16 +2,29 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./auth.css";
 import logo from "../../assets/FRESCO.png";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
-import type { AlertColor } from "@mui/material/Alert";
-
+import {
+  TextField,
+  InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Snackbar,
+} from "@mui/material";
+import MuiAlert, { type AlertColor } from "@mui/material/Alert";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import LockIcon from "@mui/icons-material/Lock";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 const Alert = MuiAlert as typeof MuiAlert;
 
 export const AuthRegister = () => {
   const [nombre, setNombre] = useState("");
+  const [nombreUsuario, setNombreUsuario] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rol, setRol] = useState("delivery");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
   const [snackbarType, setSnackbarType] = useState<AlertColor>("success");
@@ -24,7 +37,7 @@ export const AuthRegister = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!nombre || !email || !password) {
+    if (!nombre || !nombreUsuario || !email || !password || !rol) {
       setSnackbarType("warning");
       setSnackbarMsg("Completá todos los campos.");
       setSnackbarOpen(true);
@@ -44,7 +57,13 @@ export const AuthRegister = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre, email, password, rol: "admin" }),
+          body: JSON.stringify({
+            nombre,
+            nombreUsuario,
+            email,
+            password,
+            rol,
+          }),
         }
       );
 
@@ -57,7 +76,6 @@ export const AuthRegister = () => {
         return;
       }
 
-      localStorage.setItem("token", data.token);
       setSnackbarType("success");
       setSnackbarMsg("Usuario creado correctamente.");
       setSnackbarOpen(true);
@@ -76,43 +94,86 @@ export const AuthRegister = () => {
   return (
     <div className="auth-container">
       <img src={logo} alt="Logo" className="auth-logo" />
-      <h2>Crear nuevo usuario</h2>
+      <h2 className="h2title">Crear nuevo usuario</h2>
 
       <form className="auth-form" onSubmit={handleRegister}>
-        <label htmlFor="nombre">Nombre completo:</label>
-        <input
-          id="nombre"
-          type="text"
-          name="nombre"
-          placeholder="Ingresá tu nombre"
+        <TextField
+          fullWidth
+          label="Nombre completo"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          required
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <PersonIcon />
+              </InputAdornment>
+            ),
+          }}
         />
 
-        <label htmlFor="email">Correo electrónico:</label>
-        <input
-          id="email"
+        <TextField
+          fullWidth
+          label="Nombre de usuario"
+          value={nombreUsuario}
+          onChange={(e) => setNombreUsuario(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <AccountCircleIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <TextField
+          fullWidth
+          label="Correo electrónico"
           type="email"
-          name="email"
-          placeholder="Ingresá tu correo"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <EmailIcon />
+              </InputAdornment>
+            ),
+          }}
         />
 
-        <label htmlFor="password">Contraseña:</label>
-        <input
-          id="password"
+        <TextField
+          fullWidth
+          label="Contraseña"
           type="password"
-          name="password"
-          placeholder="Ingresá tu contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <LockIcon />
+              </InputAdornment>
+            ),
+          }}
         />
 
-        <button type="submit">Registrarme</button>
+        <FormControl fullWidth>
+          <InputLabel id="rol-label">
+            <AdminPanelSettingsIcon style={{ marginRight: 4 }} />
+            Rol
+          </InputLabel>
+          <Select
+            labelId="rol-label"
+            value={rol}
+            onChange={(e) => setRol(e.target.value)}
+            label="Rol"
+          >
+            <MenuItem value="owner">Owner</MenuItem>
+            <MenuItem value="delivery">Delivery</MenuItem>
+          </Select>
+        </FormControl>
+
+        <button type="submit" className="login-button">
+          Registrarme
+        </button>
       </form>
 
       <p className="auth-link">

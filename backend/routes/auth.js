@@ -7,19 +7,21 @@ require('dotenv').config();
 
 // Registro
 router.post('/register', async (req, res) => {
-  const { nombre,nombreUsuario, email, password, rol } = req.body;
-  console.log(nombreUsuario)
+  const { nombreUsuario, password, nombre, rol } = req.body;
+
   try {
-    const userExists = await Usuario.findOne({ nombreUsuario });
-    if (userExists) return res.status(400).json({ message: 'Usuario ya registrado' });
+    const existingUser = await Usuario.findOne({ nombreUsuario });
+    if (existingUser) {
+      return res.status(400).json({ message: 'El nombre de usuario ya está en uso' });
+    }
 
-    const usuario = new Usuario({ nombre, nombreUsuario, email, password, rol });
-    await usuario.save();
+    const nuevoUsuario = new Usuario({ nombreUsuario, password, nombre, rol });
+    await nuevoUsuario.save();
 
-    const token = jwt.sign({ id: usuario._id, rol: usuario.rol }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token });
-  } catch (error) {
-    res.status(500).json({ message: 'Error en registro' });
+    res.status(201).json({ message: 'Usuario creado con éxito' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error al registrar el usuario' });
   }
 });
 
