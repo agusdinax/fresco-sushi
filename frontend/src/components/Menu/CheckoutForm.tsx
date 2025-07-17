@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useCart } from "../Menu/CartContext";
 import { FiPlus, FiMinus } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
+import { TextField } from "@mui/material";
 import "./checkoutForm.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const NUM_WHATSAPP = import.meta.env.VITE_WHATSAPP;
 
-// Función para formatear en pesos argentinos
 const formatARS = (value: number) =>
   new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -21,38 +21,30 @@ interface CheckoutFormProps {
 
 export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
   const { cart, addToCart, removeFromCart } = useCart();
-  const [type, setType] = useState("delivery");
-  const [payment, setPayment] = useState("efectivo");
+  const [type, setType] = useState<"delivery" | "takeaway">("delivery");
+  const [payment, setPayment] = useState<"efectivo" | "transferencia">("efectivo");
   const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
   const [nombreCliente, setNombreCliente] = useState("");
   const [telefono, setTelefono] = useState("");
 
-  // Total calculado
-  const total = cart.reduce(
-    (sum, item) => sum + item.product.price * item.qty,
-    0
-  );
+  const total = cart.reduce((sum, item) => sum + item.product.price * item.qty, 0);
 
   const handleSend = async () => {
     const items = cart
       .map(
         (item) =>
-          `- ${item.product.name} x${item.qty} (${formatARS(
-            item.product.price * item.qty
-          )})`
+          `- ${item.product.name} x${item.qty} (${formatARS(item.product.price * item.qty)})`
       )
       .join("\n");
 
-    const msg =
+    const msg = 
       `Hola, quisiera ${isOpen ? "hacer un pedido" : "programar un pedido"} de sushi:\n\n` +
       `*Pedido:*\n${items}\n\n` +
       `*Total:* ${formatARS(total)}\n` +
       `*Tipo de entrega:* ${type === "delivery" ? "Delivery" : "Take Away"}\n` +
       (type === "delivery" ? `*Dirección:* ${address}\n` : "") +
-      `*Método de pago:* ${
-        payment === "efectivo" ? "Efectivo" : "Transferencia"
-      }\n` +
+      `*Método de pago:* ${payment === "efectivo" ? "Efectivo" : "Transferencia"}\n` +
       `*Comentario:* ${comment || "Sin comentarios"}\n` +
       `*Cliente:* ${nombreCliente}\n` +
       `*Teléfono:* ${telefono}`;
@@ -87,7 +79,6 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         return;
       }
 
-      // Abrir WhatsApp con el mensaje formateado
       const encodedMsg = encodeURIComponent(msg);
       window.open(`https://wa.me/${NUM_WHATSAPP}?text=${encodedMsg}`, "_blank");
     } catch (error) {
@@ -101,10 +92,7 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
       <h3>🛒 Mi pedido</h3>
 
       {!isOpen && (
-        <div
-          className="closed-warning"
-          style={{ marginBottom: "1rem", color: "red" }}
-        >
+        <div className="closed-warning">
           ⚠️ Nos encontramos cerrados. Podés <strong>programar tu pedido</strong>.
         </div>
       )}
@@ -117,17 +105,11 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
             <li key={item.product.id} className="checkout-item">
               <span>{item.product.name}</span>
               <div className="item-controls">
-                <button
-                  onClick={() => removeFromCart(item.product.id)}
-                  title="Quitar uno"
-                >
+                <button onClick={() => removeFromCart(item.product.id)} title="Quitar uno">
                   <FiMinus />
                 </button>
                 <span>{item.qty}</span>
-                <button
-                  onClick={() => addToCart(item.product)}
-                  title="Agregar uno"
-                >
+                <button onClick={() => addToCart(item.product)} title="Agregar uno">
                   <FiPlus />
                 </button>
               </div>
@@ -141,7 +123,7 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
       </p>
 
       <form
-        onSubmit={(e) => {
+        onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
           e.preventDefault();
           if (!nombreCliente || !telefono) {
             alert("Por favor completá tu nombre y teléfono.");
@@ -177,11 +159,13 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         {type === "delivery" && (
           <fieldset>
             <legend>Dirección para entrega:</legend>
-            <input
-              type="text"
-              placeholder="Dirección"
+            <TextField
+              fullWidth
+              label="Dirección"
+              placeholder="Ej: Calle 13 entre 24 y 15 927"
+              variant="outlined"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)}
               required
             />
           </fieldset>
@@ -213,37 +197,40 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
 
         <fieldset>
           <legend>Datos del cliente:</legend>
-          <label>
-            Nombre:
-            <input
-              type="text"
-              placeholder="Tu nombre"
-              value={nombreCliente}
-              onChange={(e) => setNombreCliente(e.target.value)}
-              required
-            />
-          </label>
+          <TextField
+            fullWidth
+            label="Nombre"
+            variant="outlined"
+            placeholder="Ej: Joaquin"
+            value={nombreCliente}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNombreCliente(e.target.value)}
+            required
+          />
         </fieldset>
 
         <fieldset>
-          <label>
-            Teléfono:
-            <input
-              type="text"
-              placeholder="Tu teléfono"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              required
-            />
-          </label>
+          <TextField
+            fullWidth
+            label="Teléfono"
+            variant="outlined"
+            placeholder="Ej: 2266456789"
+            value={telefono}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTelefono(e.target.value)}
+            required
+          />
         </fieldset>
 
         <fieldset>
           <legend>Agregar un comentario:</legend>
-          <textarea
-            placeholder="Comentario"
+          <TextField
+            fullWidth
+            label="Comentario"
+            variant="outlined"
+            placeholder="Ingresa un comentario"
+            multiline
+            rows={3}
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComment(e.target.value)}
           />
         </fieldset>
 
