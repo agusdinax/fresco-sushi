@@ -1,4 +1,10 @@
 import { useState } from "react";
+import {
+  TextField,
+  Typography,
+  Box,
+  Alert,
+} from "@mui/material";
 import "./ContactForm.css";
 import contactImg from "../../assets/header1.jpg";
 
@@ -74,50 +80,58 @@ export const ContactForm = () => {
         <div className="contact-image">
           <img src={contactImg} alt="Contacto" />
         </div>
-        <form className="contact-form" onSubmit={handleSubmit}>
-          <h2>Contacto</h2>
 
-          <div className="form-group">
-            <label>Nombre</label>
-            <input
-              type="text"
+        <form className="contact-form" onSubmit={handleSubmit} noValidate>
+          <Typography variant="h4" component="h2" textAlign="center" gutterBottom>
+            Contacto
+          </Typography>
+
+          <Box display="flex" flexDirection="column" gap={2}>
+            <TextField
+              label="Nombre"
+              placeholder="Ej: Joaquin"
               name="name"
-              placeholder="Tu nombre"
+              variant="outlined"
               value={formData.name}
               onChange={handleChange}
-              className={errors.name ? "error" : ""}
+              error={!!errors.name}
+              helperText={errors.name}
+              fullWidth
             />
-            {errors.name && <small>{errors.name}</small>}
-          </div>
 
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
+            <TextField
+              label="Email"
+              placeholder="Ej: sushi@sushi.com"
               name="email"
-              placeholder="correo@ejemplo.com"
+              type="email"
+              variant="outlined"
               value={formData.email}
               onChange={handleChange}
-              className={errors.email ? "error" : ""}
+              error={!!errors.email}
+              helperText={errors.email}
+              fullWidth
             />
-            {errors.email && <small>{errors.email}</small>}
-          </div>
 
-          <div className="form-group">
-            <label>Mensaje</label>
-            <textarea
+            <TextField
+              label="Mensaje"
+              placeholder="Ingresa un mensaje"
               name="message"
-              placeholder="Escribí tu mensaje..."
+              variant="outlined"
+              multiline
+              rows={4}
               value={formData.message}
               onChange={handleChange}
-              className={errors.message ? "error" : ""}
+              error={!!errors.message}
+              helperText={errors.message}
+              fullWidth
             />
-            {errors.message && <small>{errors.message}</small>}
-          </div>
-
-          <button type="submit">Enviar</button>
-
-          {submitted && <p className="success-message">Mensaje enviado con éxito 🎉</p>}
+            <button type="submit">Enviar</button>
+            {submitted && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                Mensaje enviado con éxito 🎉
+              </Alert>
+            )}
+          </Box>
         </form>
       </div>
     </section>

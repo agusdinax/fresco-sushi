@@ -73,11 +73,11 @@
 
 form fieldset {
   border: none;
-  margin-bottom: 0.4rem;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
-
 
 form fieldset legend {
   font-weight: 600;
