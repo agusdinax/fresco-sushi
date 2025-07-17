@@ -27,15 +27,16 @@ export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
   const fetchProductos = async () => {
     try {
       const res = await axios.get<Product[]>(`${API_URL}/api/productos`);
-      setProductos(res.data);
+      const disponibles = res.data.filter(p => p.disponible !== false);
+      setProductos(disponibles);
 
-      // Extraer categorías únicas de productos disponibles
+      // Extraer categorías únicas
       const cats = Array.from(
-        new Set(res.data.filter(p => p.disponible !== false).map(p => p.category))
+        new Set(disponibles.map(p => p.category))
       ).map(c => ({ key: c, label: c.charAt(0).toUpperCase() + c.slice(1) }));
       setCategorias(cats);
 
-      // Si no hay categoría seleccionada o la actual no existe, setear la primera
+      // Seleccionar categoría por defecto
       if (!selectedCategory || !cats.find(c => c.key === selectedCategory)) {
         setSelectedCategory(cats[0]?.key || "");
       }
@@ -53,7 +54,7 @@ export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
       setStockGeneralActivo(res.data.stockGeneralActivo);
     } catch (error) {
       console.error("Error al obtener stock general:", error);
-      setStockGeneralActivo(false); // si error, asumir false para seguridad
+      setStockGeneralActivo(false);
     }
   };
 
@@ -81,11 +82,7 @@ export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
 
       <div className="product-grid">
         {productos
-          .filter(
-            (p) =>
-              p.category === selectedCategory &&
-              p.disponible !== false // solo disponibles
-          )
+          .filter(p => p.category === selectedCategory)
           .map((product) => (
             <ProductCard
               key={product.id}

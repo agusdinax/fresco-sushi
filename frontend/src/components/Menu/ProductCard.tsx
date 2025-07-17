@@ -10,7 +10,8 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: ProductCardProps) => {
   const { cart, addToCart, removeFromCart } = useCart();
-  const quantity = cart.filter((p) => p.id === product.id).length;
+  const item = cart.find((c) => c.product.id === product.id);
+  const quantity = item ? item.qty : 0;
   const [showFinalize, setShowFinalize] = useState(false);
 
   useEffect(() => {
@@ -23,12 +24,16 @@ export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: Product
     return () => clearTimeout(timer);
   }, [quantity]);
 
-  // No permitir agregar si stock general está desactivado
+  // Puede agregar sólo si stock general y producto disponible
   const canAddToCart = stockGeneralActivo && product.disponible !== false;
 
   return (
-    <div className="product-card">
-      <img src={product.image} alt={product.name} />
+    <div className="product-card" style={{ opacity: canAddToCart ? 1 : 0.5 }}>
+      {product.image ? (
+        <img src={product.image} alt={product.name} />
+      ) : (
+        <div className="no-image-placeholder">Sin imagen</div>
+      )}
       <h4>{product.name}</h4>
       <p>{product.description}</p>
       <span>${product.price}</span>
@@ -38,6 +43,7 @@ export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: Product
           onClick={() => canAddToCart && addToCart(product)}
           disabled={!canAddToCart}
           title={!canAddToCart ? "No hay stock disponible" : ""}
+          style={{ cursor: canAddToCart ? "pointer" : "not-allowed" }}
         >
           <FiShoppingCart />
           Agregar al carrito
@@ -45,7 +51,11 @@ export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: Product
       ) : (
         <>
           <div className="product-card__actions">
-            <button onClick={() => removeFromCart(product.id)}>
+            <button
+              onClick={() => removeFromCart(product.id)}
+              title="Quitar uno"
+              style={{ cursor: "pointer" }}
+            >
               <FiMinus />
             </button>
             <span className="product-card__qty">Cantidad: {quantity}</span>
@@ -53,6 +63,7 @@ export const ProductCard = ({ product, onFinalize, stockGeneralActivo }: Product
               onClick={() => canAddToCart && addToCart(product)}
               disabled={!canAddToCart}
               title={!canAddToCart ? "No hay stock disponible" : ""}
+              style={{ cursor: canAddToCart ? "pointer" : "not-allowed" }}
             >
               <FiPlus />
             </button>

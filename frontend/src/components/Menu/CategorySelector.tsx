@@ -1,5 +1,5 @@
 interface CategorySelectorProps {
-  categories: { key: string; icon: string; label: string }[];
+  categories: { key: string; label: string }[];
   selected: string;
   onSelect: (key: string) => void;
 }
@@ -16,7 +16,7 @@ export const CategorySelector = ({
         className={selected === cat.key ? "active" : ""}
         onClick={() => onSelect(cat.key)}
       >
-        <span>{cat.icon}</span> {cat.label}
+      {cat.label}
       </button>
     ))}
   </div>

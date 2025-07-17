@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 
 export interface Product {
-  id: string;          // ojo que id es string (MongoDB ObjectId)
+  id: string;
   name: string;
   description?: string;
   price: number;
@@ -10,10 +10,15 @@ export interface Product {
   disponible?: boolean;
 }
 
+interface CartItem {
+  product: Product;
+  qty: number;
+}
+
 interface CartContextType {
-  cart: Product[];
+  cart: CartItem[];
   addToCart: (product: Product) => void;
-  removeFromCart: (id: string) => void;
+  removeFromCart: (productId: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -25,19 +30,36 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [cart, setCart] = useState<Product[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   const addToCart = (product: Product) => {
-    setCart((prev) => [...prev, product]);
+    setCart((prev) => {
+      const existingIndex = prev.findIndex(item => item.product.id === product.id);
+      if (existingIndex !== -1) {
+        // Ya está, aumentar cantidad
+        const updated = [...prev];
+        updated[existingIndex].qty += 1;
+        return updated;
+      } else {
+        // Nuevo producto
+        return [...prev, { product, qty: 1 }];
+      }
+    });
   };
 
-  const removeFromCart = (id: string) => {
+  const removeFromCart = (productId: string) => {
     setCart((prev) => {
-      const index = prev.findIndex((p) => p.id === id);
-      if (index !== -1) {
-        const newCart = [...prev];
-        newCart.splice(index, 1);
-        return newCart;
+      const existingIndex = prev.findIndex(item => item.product.id === productId);
+      if (existingIndex !== -1) {
+        const updated = [...prev];
+        if (updated[existingIndex].qty > 1) {
+          updated[existingIndex].qty -= 1;
+          return updated;
+        } else {
+          // Quitar producto si qty = 1
+          updated.splice(existingIndex, 1);
+          return updated;
+        }
       }
       return prev;
     });

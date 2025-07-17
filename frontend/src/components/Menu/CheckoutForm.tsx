@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useCart, type Product } from "../Menu/CartContext";
+import { useCart} from "../Menu/CartContext";
 import { FiPlus, FiMinus } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import "./checkoutForm.css";
@@ -20,19 +20,12 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
   const [nombreCliente, setNombreCliente] = useState("");
   const [telefono, setTelefono] = useState("");
 
-  // Agrupar productos por id
-  const grouped = cart.reduce((acc, item) => {
-    acc[item.id] = acc[item.id]
-      ? { ...acc[item.id], qty: acc[item.id].qty + 1 }
-      : { ...item, qty: 1 };
-    return acc;
-  }, {} as Record<string, (typeof cart)[number] & { qty: number }>);
-
-  const total = cart.reduce((sum, p) => sum + p.price, 0);
+  // Ya cart es array de {product, qty}
+  const total = cart.reduce((sum, item) => sum + item.product.price * item.qty, 0);
 
   const handleSend = async () => {
-    const items = Object.values(grouped)
-      .map((p) => `- ${p.name} x${p.qty} ($${p.price * p.qty})`)
+    const items = cart
+      .map((item) => `- ${item.product.name} x${item.qty} ($${item.product.price * item.qty})`)
       .join("\n");
 
     const msg =
@@ -49,11 +42,11 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
     const pedidoPayload = {
       nombreCliente,
       telefono,
-      productos: Object.values(grouped).map((p) => ({
-        id: p.id,
-        producto: p.name,
-        cantidad: p.qty,
-        precio: p.price,
+      productos: cart.map((item) => ({
+        id: item.product.id,
+        producto: item.product.name,
+        cantidad: item.qty,
+        precio: item.product.price,
       })),
       total,
       comentario: comment,
@@ -99,21 +92,21 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         <p className="empty-cart">El carrito está vacío.</p>
       ) : (
         <ul className="checkout-items">
-          {Object.values(grouped).map((item) => (
-            <li key={item.id} className="checkout-item">
-              <span>{item.name}</span>
-              <div className="item-controls">
-                <button onClick={() => removeFromCart(item.id)} title="Quitar uno">
-                  <FiMinus />
-                </button>
-                <span>{item.qty}</span>
-                <button onClick={() => addToCart(item)} title="Agregar uno">
-                  <FiPlus />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        {cart.map((item) => (
+          <li key={item.product.id} className="checkout-item">
+            <span>{item.product.name}</span>
+            <div className="item-controls">
+              <button onClick={() => removeFromCart(item.product.id)} title="Quitar uno">
+                <FiMinus />
+              </button>
+              <span>{item.qty}</span>
+              <button onClick={() => addToCart(item.product)} title="Agregar uno">
+                <FiPlus />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
       )}
 
       <p className="checkout-total">
@@ -130,6 +123,7 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
           handleSend();
         }}
       >
+        {/* Resto del formulario igual que antes */}
         <fieldset>
           <legend>Tipo de entrega:</legend>
           <label>
