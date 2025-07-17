@@ -1,4 +1,3 @@
-// ProductoManager.tsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Snackbar from "@mui/material/Snackbar";
@@ -48,7 +47,7 @@ const ProductoManager = () => {
     name: "",
     category: "",
     description: "",
-    price: 0,
+    price: undefined as any,
     disponible: true,
     image: "",
   });
@@ -65,7 +64,7 @@ const ProductoManager = () => {
 
   const fetchProductos = async () => {
     setLoading(true);
-    setError(null);
+    setError(null); 
     try {
       const res = await axios.get(`${API_URL}/api/productos`, axiosConfig);
       const data = Array.isArray(res.data) ? res.data : res.data.productos;
@@ -115,7 +114,7 @@ const ProductoManager = () => {
       name: "",
       category: "",
       description: "",
-      price: 0,
+      price: undefined as any,
       disponible: true,
       image: "",
     });
@@ -258,7 +257,7 @@ const ProductoManager = () => {
           helperText={formErrors.category}
         />
           <TextField label="Descripción" name="description" fullWidth multiline value={formData.description} onChange={handleChange} placeholder="Ej: Con queso y palta" />
-          <TextField label="Precio (ARS)" name="price" type="number" fullWidth value={formData.price} onChange={handleChange} placeholder="Ej: 2500" />
+          <TextField label="Precio (ARS)" name="price" type="number" fullWidth value={formData.price ?? ""} onChange={handleChange} placeholder="Ej: 2500"  />
           <FormControlLabel control={<Checkbox checked={formData.disponible} onChange={(e) => setFormData(prev => ({ ...prev, disponible: e.target.checked }))} />} label="Producto disponible" />
           <input type="file" accept="image/*" onChange={handleImageUpload} />
           {imagePreview && <img src={imagePreview} className="preview" alt="preview" />}

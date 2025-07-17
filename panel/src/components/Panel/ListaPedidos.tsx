@@ -4,11 +4,12 @@ import type { Range } from "react-date-range";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { es } from "date-fns/locale";
-
+import { TextField, MenuItem } from "@mui/material";
 import "dayjs/locale/es";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import "./ListaPedidos.css";
+import InventoryIcon from "@mui/icons-material/Inventory";
 
 dayjs.extend(isBetween);
 dayjs.locale("es");
@@ -135,84 +136,98 @@ export const ListaPedidos = () => {
 
   return (
     <div className="contenedor-lista">
-      <h2 className="titulo-lista">📦 Historial de Pedidos</h2>
+      <h2 className="titulo-lista"><InventoryIcon/>HISTORIAL DE PEDIDOS</h2>
 
       <div className="filtros">
-        <input
-          type="text"
-          placeholder="Buscar por cliente"
-          value={filtros.usuario}
-          onChange={(e) => {
-            setPaginaActual(1);
-            setFiltros({ ...filtros, usuario: e.target.value });
-          }}
-        />
+  <TextField
+    label="Buscar por cliente"
+    variant="outlined"
+    value={filtros.usuario}
+    onChange={(e) => {
+      setPaginaActual(1);
+      setFiltros({ ...filtros, usuario: e.target.value });
+    }}
+    size="small"
+  />
 
-        <select
-          value={filtros.metodoPago}
-          onChange={(e) => {
-            setPaginaActual(1);
-            setFiltros({ ...filtros, metodoPago: e.target.value });
-          }}
-        >
-          {METODOS_PAGO.map((mp) => (
-            <option key={mp} value={mp}>
-              {mp || "Todos los métodos de pago"}
-            </option>
-          ))}
-        </select>
+  <TextField
+    label="Método de pago"
+    variant="outlined"
+    select
+    value={filtros.metodoPago}
+    onChange={(e) => {
+      setPaginaActual(1);
+      setFiltros({ ...filtros, metodoPago: e.target.value });
+    }}
+    size="small"
+  >
+    {METODOS_PAGO.map((mp) => (
+      <MenuItem key={mp} value={mp}>
+        {mp || "Todos"}
+      </MenuItem>
+    ))}
+  </TextField>
 
-        <select
-          value={filtros.tipoEntrega}
-          onChange={(e) => {
-            setPaginaActual(1);
-            setFiltros({ ...filtros, tipoEntrega: e.target.value });
-          }}
-        >
-          {TIPOS_ENTREGA.map((te) => (
-            <option key={te} value={te}>
-              {te || "Todos los tipos de entrega"}
-            </option>
-          ))}
-        </select>
+  <TextField
+    label="Tipo de entrega"
+    variant="outlined"
+    select
+    value={filtros.tipoEntrega}
+    onChange={(e) => {
+      setPaginaActual(1);
+      setFiltros({ ...filtros, tipoEntrega: e.target.value });
+    }}
+    size="small"
+  >
+      {TIPOS_ENTREGA.map((te) => (
+        <MenuItem key={te} value={te}>
+          {te || "Todos"}
+        </MenuItem>
+      ))}
+    </TextField>
 
-        <select
-          value={estado}
-          onChange={(e) => {
-            setPaginaActual(1);
-            setEstado(e.target.value);
-          }}
-        >
-          <option value="">Todos los estados</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="en preparación">En preparación</option>
-          <option value="en reparto">En reparto</option>
-          <option value="entregado">Entregado</option>
-        </select>
+    <TextField
+      label="Estado"
+      variant="outlined"
+      select
+      value={estado}
+      onChange={(e) => {
+        setPaginaActual(1);
+        setEstado(e.target.value);
+      }}
+      size="small"
+    >
+      <MenuItem value="">Todos</MenuItem>
+      <MenuItem value="pendiente">Pendiente</MenuItem>
+      <MenuItem value="en preparación">En preparación</MenuItem>
+      <MenuItem value="en reparto">En reparto</MenuItem>
+      <MenuItem value="entregado">Entregado</MenuItem>
+      <MenuItem value="cancelado">Cancelado</MenuItem>
+    </TextField>
 
-        <button
-          className="btn-fechas"
-          onClick={() => setMostrarCalendario(!mostrarCalendario)}
-        >
-          📅 Seleccionar Fechas
-        </button>
+    <button
+      className="btn-fechas"
+      onClick={() => setMostrarCalendario(!mostrarCalendario)}
+    >
+      📅 Seleccionar Fechas
+    </button>
 
-        <button
-          className="btn-limpiar"
-          onClick={() => {
-            setPaginaActual(1);
-            setFiltros({
-              usuario: "",
-              metodoPago: "",
-              tipoEntrega: "",
-              fechas: { startDate: undefined, endDate: undefined, key: "selection" },
-            });
-            setEstado("");
-          }}
-        >
-          Limpiar filtros ❌
-        </button>
-      </div>
+    <button
+      className="btn-limpiar"
+      onClick={() => {
+        setPaginaActual(1);
+        setFiltros({
+          usuario: "",
+          metodoPago: "",
+          tipoEntrega: "",
+          fechas: { startDate: undefined, endDate: undefined, key: "selection" },
+        });
+        setEstado("");
+      }}
+    >
+      Limpiar filtros ❌
+    </button>
+  </div>
 
       {mostrarCalendario && (
         <div ref={calendarioRef} className="popup-calendario">

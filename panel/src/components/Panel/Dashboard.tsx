@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TextField, MenuItem } from "@mui/material";
 import "./Dashboard.css";
 // Íconos MUI
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -221,16 +222,22 @@ export const Dashboard = () => {
             <p><strong>Fecha:</strong> {new Date(pedido.fechaPedido).toLocaleString()}</p>
             {/* EL OWNER PUEDE ACTUALIZAR EL ESTADO */}
             {rol === "owner" && (
-              <select
-                value={pedido.estado}
-                onChange={(e) => actualizarEstado(pedido._id, e.target.value)}
-              >
-                <option value="pendiente">Pendiente</option>
-                <option value="en preparación">En preparación</option>
-                <option value="en reparto">En reparto</option>
-                <option value="entregado">Entregado</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
+             <TextField
+              select
+              label="Estado"
+              value={pedido.estado}
+              onChange={(e) => actualizarEstado(pedido._id, e.target.value)}
+              size="small"
+              fullWidth
+              variant="outlined"
+              style={{ marginTop: "0.5rem" }}
+            >
+              <MenuItem value="pendiente">Pendiente</MenuItem>
+              <MenuItem value="en preparación">En preparación</MenuItem>
+              <MenuItem value="en reparto">En reparto</MenuItem>
+              <MenuItem value="entregado">Entregado</MenuItem>
+              <MenuItem value="cancelado">Cancelado</MenuItem>
+            </TextField>
             )}
           </div>
         ))}

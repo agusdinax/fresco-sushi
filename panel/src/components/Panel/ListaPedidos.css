@@ -14,7 +14,7 @@
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
   text-align: center;
-  color: #111827;
+  color: #222;
 }
 
 .filtros {
@@ -25,14 +25,8 @@
   margin-bottom: 1rem;
 }
 
-.filtros input,
-.filtros select {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1.8px solid #d1d5db;
-  font-size: 1rem;
+.filtros .MuiTextField-root {
   min-width: 180px;
-  transition: border-color 0.3s ease;
 }
 
 .filtros input:focus,
@@ -56,10 +50,6 @@
 
 .filtros button:hover {
   background-color: #2563eb;
-}
-
-.btn-limpiar {
-  background-color: #ef4444;
 }
 
 .btn-limpiar:hover {
