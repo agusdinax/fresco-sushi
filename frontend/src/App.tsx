@@ -22,59 +22,95 @@ const images = [
 export const App = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [nextOpenDay, setNextOpenDay] = useState<string | null>(null);
 
   const toggleCheckout = () => {
     setCheckoutOpen(prev => !prev);
   };
 
   useEffect(() => {
-      type Day = "miércoles" | "jueves" | "viernes" | "sábado" | "domingo";
+  type Day = "lunes" | "martes" | "miércoles" | "jueves" | "viernes" | "sábado" | "domingo";
 
-      const SCHEDULE: Record<Day, [string, string][]> = {
-        miércoles: [["19:00", "00:00"]],
-        jueves: [["19:00", "00:00"]],
-        viernes: [["19:00", "00:00"]],
-        sábado: [["19:00", "00:00"]],
-        domingo: [["19:00", "00:00"]],
-      };
+  const SCHEDULE: Record<Day, [string, string][]> = {
+    miércoles: [["19:00", "00:00"]],
+    jueves: [["19:00", "00:00"]],
+    viernes: [["19:00", "00:00"]],
+    sábado: [["19:00", "00:00"]],
+    domingo: [["19:00", "00:00"]],
+    lunes: [],
+    martes: [],
+  };
 
-      const hhmmToDate = (base: Date, hhmm: string) => {
-        const [h, m] = hhmm.split(":").map(Number);
-        const d = new Date(base);
-        d.setHours(h, m, 0, 0);
-        return d;
-      };
+  const daysOrdered: Day[] = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 
-      const nowBetween = ([start, end]: [string, string], now: Date) => {
-        const ini = hhmmToDate(now, start);
-        const fin = hhmmToDate(now, end);
-        if (fin < ini) fin.setDate(fin.getDate() + 1);
-        return now >= ini && now <= fin;
-      };
+  const hhmmToDate = (base: Date, hhmm: string) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    const d = new Date(base);
+    d.setHours(h, m, 0, 0);
+    return d;
+  };
 
-      const checkOpen = () => {
-        const now = new Date();
-        const today = now.toLocaleDateString("es-AR", { weekday: "long" }) as Day;
-        const daySchedule = SCHEDULE[today];
-        if (!daySchedule) {
-          setIsOpen(false);
-          return;
-        }
-        const openNow = daySchedule.some((range: [string, string]) => nowBetween(range, now));
-        setIsOpen(openNow);
-      };
+  const nowBetween = ([start, end]: [string, string], now: Date) => {
+    const ini = hhmmToDate(now, start);
+    const fin = hhmmToDate(now, end);
+    if (fin < ini) fin.setDate(fin.getDate() + 1); // por si cruza medianoche
+    return now >= ini && now <= fin;
+  };
 
-      checkOpen();
-      const interval = setInterval(checkOpen, 60000);
-      return () => clearInterval(interval);
-    }, []);
+  const getNextOpenDay = (now: Date): string => {
+    const currentDayIndex = now.getDay(); // 0 = domingo, 1 = lunes, ...
+    for (let i = 1; i <= 7; i++) {
+      const checkDayIndex = (currentDayIndex + i) % 7;
+      const dayName = daysOrdered[checkDayIndex];
+      if (SCHEDULE[dayName as Day]?.length > 0) {
+        return dayName.charAt(0).toUpperCase() + dayName.slice(1); // Capitalize
+      }
+    }
+    return "";
+  };
+
+  const checkOpen = () => {
+    const now = new Date();
+    const today = now.toLocaleDateString("es-AR", { weekday: "long" }) as Day;
+    const daySchedule = SCHEDULE[today];
+    if (!daySchedule) {
+      setIsOpen(false);
+      setNextOpenDay(getNextOpenDay(now));
+      return;
+    }
+
+    const openNow = daySchedule.some((range: [string, string]) => nowBetween(range, now));
+    setIsOpen(openNow);
+
+    if (openNow) {
+  setNextOpenDay(null); // estamos abiertos ahora
+  } else {
+    // Verificar si hoy abrirá más tarde
+    const now = new Date();
+    const futureOpenToday = daySchedule.some(([start, _]) => {
+      const ini = hhmmToDate(now, start);
+      return now < ini;
+    });
+
+    if (futureOpenToday) {
+      setNextOpenDay("hoy");
+    } else {
+      setNextOpenDay(getNextOpenDay(now));
+    }
+  }
+};
+
+  checkOpen();
+  const interval = setInterval(checkOpen, 60000);
+  return () => clearInterval(interval);
+}, []);
 
  return (
     <CartProvider>
       <div className="app-container header" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <Navbar onToggleCheckout={toggleCheckout} isCheckoutOpen={checkoutOpen} />
         <HeaderGallery />
-        <HorariosFresco isOpen={isOpen} />
+        <HorariosFresco isOpen={isOpen} nextOpenDay={nextOpenDay} />
         <main style={{ flex: 1 }}>
           <div id="menu">
             <Menu onFinalizePurchase={toggleCheckout} checkoutOpen={checkoutOpen} />

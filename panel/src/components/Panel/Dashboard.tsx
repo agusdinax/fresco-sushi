@@ -176,10 +176,6 @@ export const Dashboard = () => {
             <div className="card-label">⏳NUEVOS PEDIDOS</div>
             <div className="card-number highlight-orange">{resumen.pendientes}</div>
           </div>
-          <div className="card-separator">
-            <span className="desktop">|</span>
-            <span className="mobile">__</span>
-          </div>
           <div className="card">
             <div className="card-label">📦 PENDIENTE REPARTO</div>
             <div className="card-number">{resumen.pendienteReparto}</div>
