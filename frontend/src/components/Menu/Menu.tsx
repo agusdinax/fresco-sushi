@@ -61,7 +61,7 @@ export const Menu = ({ onFinalizePurchase, checkoutOpen }: MenuProps) => {
     const interval = setInterval(() => {
       fetchProductos();
       fetchStockGeneral();
-    }, 5 * 60 * 1000);
+    }, 100000);
 
     return () => clearInterval(interval);
   }, []);
