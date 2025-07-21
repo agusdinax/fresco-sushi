@@ -31,7 +31,12 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
   const [telefono, setTelefono] = useState("");
 
   const total = cart.reduce((sum, item) => sum + item.product.price * item.qty, 0);
-
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+    if (/^\d*$/.test(value)) {
+      setTelefono(value);
+      }
+    };
   const handleSend = async () => {
     const items = cart
       .map(
@@ -211,15 +216,16 @@ export const CheckoutForm = ({ isOpen }: CheckoutFormProps) => {
         </fieldset>
 
         <fieldset>
-          <TextField
-            fullWidth
-            label="Teléfono"
-            variant="outlined"
-            placeholder="Ej: 2266456789"
-            value={telefono}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTelefono(e.target.value)}
-            required
-          />
+        <TextField
+          fullWidth
+          label="Teléfono"
+          variant="outlined"
+          type="tel"
+          placeholder="Ej: 2266456789"
+          value={telefono}
+          onChange={handleTelefonoChange}
+          required
+        />
         </fieldset>
 
         <fieldset>
