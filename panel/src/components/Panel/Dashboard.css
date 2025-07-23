@@ -55,7 +55,7 @@
   transition: transform 0.2s;
   flex: 1 1 calc(25% - 1rem); /* 4 por fila con espacio */
   min-width: 160px;
-  max-width: 100%;
+  max-width: 98%;
 }
 .card-separator {
   display: flex;
@@ -145,24 +145,29 @@
   box-shadow: 0 4px 14px rgba(0,0,0,0.15);
 }
 
-.pedido-card[data-estado="pendiente"] {
-  border-left-color: #f7a83b;
-  background-color: #fff7e6;
+.pedido-card[data-estado="pending"] {
+  border-left-color: #f99b17;
+  background-color: #e2c49a;
 }
 
-.pedido-card[data-estado="en preparación"] {
-  border-left-color: #b4f0b4;
-  background-color: #fff7e6;
+.pedido-card[data-estado="in-preparation"] {
+  border-left-color: #d4f038;
+  background-color: #f2f7d3;
 }
 
-.pedido-card[data-estado="en reparto"] {
-  border-left-color: #5bc0de;
-  background-color: #e6f7ff;
+.pedido-card[data-estado="in-distribution"] {
+  border-left-color: #44c5ec;
+  background-color: rgb(198, 225, 237);
+}
+
+.pedido-card[data-estado="ready"] {
+  border-left-color: #e56edf;
+  background-color: #e5c7e3;
 }
 
 .pedido-card[data-estado="cancelado"] {
   border-left-color: #ee7d7d;
-  background-color: #e6f7ff;
+  background-color: #edcfcf;
 }
 .pedido-card p,
 .pedido-card ul,

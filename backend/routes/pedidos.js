@@ -25,7 +25,7 @@ router.get('/', protect, async (req, res) => {
     if (req.usuario.rol === 'owner') {
       pedidos = await Pedido.find();
     } else if (req.usuario.rol === 'delivery') {
-      pedidos = await Pedido.find({ estado: 'en reparto' }); 
+      pedidos = await Pedido.find({ estado: 'in-distribution' }); 
     } else {
       pedidos = [];
     }
@@ -141,7 +141,7 @@ module.exports = router;
  *           type: number
  *         estado:
  *           type: string
- *           enum: [pendiente, en preparación, en reparto, entregado]
+ *           enum: [pending, in-preparation, in-distribution, entregado]
  *         fechaPedido:
  *           type: string
  *           format: date-time
@@ -286,7 +286,7 @@ module.exports = router;
  *             properties:
  *               estado:
  *                 type: string
- *                 enum: [pendiente, en preparación, en reparto, entregado]
+ *                 enum: [pending, in-preparation, in-distribution, entregado]
  *     responses:
  *       200:
  *         description: Estado actualizado exitosamente

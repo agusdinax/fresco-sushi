@@ -17,8 +17,8 @@ const PedidoSchema = new mongoose.Schema({
   comentario: { type: String},
   estado: {
     type: String,
-    enum: ['pendiente', 'en preparación', 'en reparto', 'entregado', 'cancelado'],
-    default: 'pendiente'
+    enum: ['pending', 'in-preparation', 'ready','in-distribution', 'entregado', 'cancelado'],
+    default: 'pending'
   },
   fechaPedido: { type: Date, default: Date.now }
 });

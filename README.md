@@ -119,7 +119,7 @@ http://localhost:5000/api-docs
   total: number,
   metodoPago: 'efectivo' | 'transferencia',
   tipoEntrega: 'delivery' | 'takeaway',
-  estado: 'pendiente' | 'en_preparación' | 'en_reparto' | 'entregado' | 'cancelado',
+  estado: 'pending' | 'en_preparación' | 'en_reparto' | 'entregado' | 'cancelado',
   comentario: string,
   fecha: Date
 }
@@ -157,7 +157,7 @@ http://localhost:5000/api-docs
 
 | Estado           | Descripción                             | Color UI |
 | ---------------- | --------------------------------------- | -------- |
-| `pendiente`      | Pedido recibido, esperando confirmación | Amarillo |
+| `pending`      | Pedido recibido, esperando confirmación | Amarillo |
 | `en_preparación` | En cocina / preparando                  | Azul     |
 | `en_reparto`     | En camino (solo delivery)               | Celeste  |
 | `entregado`      | Completado y entregado                  | Verde    |

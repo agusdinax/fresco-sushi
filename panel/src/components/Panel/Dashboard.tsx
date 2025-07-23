@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { TextField, MenuItem, Box } from "@mui/material";
-import "./Dashboard.css";
-import { Typography } from "@mui/material";
-// Íconos MUI
+import { TextField, MenuItem, Box, Typography } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import InventoryIcon from "@mui/icons-material/Inventory";
+import "./Dashboard.css";
+
 interface Pedido {
   _id: string;
   nombreCliente: string;
@@ -23,6 +22,15 @@ interface Pedido {
   fechaPedido: string;
 }
 
+const estadosTraducidos: Record<string, string> = {
+  pending: "Pendiente",
+  "in-preparation": "En preparación",
+  ready: "Listo para reparto",
+  "in-distribution": "En reparto",
+  entregado: "Entregado",
+  cancelado: "Cancelado",
+};
+
 export const Dashboard = () => {
   const [resumen, setResumen] = useState({
     totalMes: 0,
@@ -35,84 +43,95 @@ export const Dashboard = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [rol, setRol] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{ mensaje: string; tipo: "ok" | "error" } | null>(null);
-  const [mostrarDashboardCards, setMostrarDashboardCards] = useState(true); // 👈 NUEVO
+  const [mostrarDashboardCards, setMostrarDashboardCards] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const rolGuardado = localStorage.getItem("rol");
-    setRol(rolGuardado);
+  const token = localStorage.getItem("token");
+  const rolGuardado = localStorage.getItem("rol");
+  setRol(rolGuardado);
 
-    const obtenerPedidos = () => {
-      fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!Array.isArray(data)) return;
+  const obtenerPedidos = () => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data)) return;
 
-          const hoy = new Date();
-          const hoyStr = hoy.toDateString();
-          const mesActual = hoy.getMonth();
-          const añoActual = hoy.getFullYear();
+        const hoy = new Date();
+        const hoyStr = hoy.toDateString();
+        const mesActual = hoy.getMonth();
+        const añoActual = hoy.getFullYear();
 
-          const pedidosDelDia = data.filter((p: Pedido) => {
-            const fecha = new Date(p.fechaPedido);
-            return fecha.toDateString() === hoyStr;
-          });
-
-          const entregadosHoy = pedidosDelDia.filter(
-            (p) => p.estado.toLowerCase() === "entregado"
-          );
-
-          const entregadosMes = data.filter((p: Pedido) => {
-            const fecha = new Date(p.fechaPedido);
-            return (
-              fecha.getMonth() === mesActual &&
-              fecha.getFullYear() === añoActual &&
-              p.estado.toLowerCase() === "entregado"
-            );
-          });
-
-          const visibles = pedidosDelDia.sort(
-            (a, b) => new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime()
-          );
-
-          const nuevos = visibles.filter((p) => p.estado === "pendiente").length;
-
-          const enReparto = visibles.filter((p) => p.estado === "en reparto").length;
-
-          const pendienteReparto = visibles.filter(
-            (p) =>
-              (p.estado === "pendiente" || p.estado === "en preparación") &&
-              p.tipoEntrega.toLowerCase() === "delivery"
-          ).length;
-
-          const pendienteTakeaway = visibles.filter(
-            (p) =>
-              (p.estado === "pendiente" || p.estado === "en preparación") &&
-              p.tipoEntrega.toLowerCase() === "takeaway"
-          ).length;
-
-          setResumen({
-            totalMes: entregadosMes.length,
-            pendientes: nuevos,
-            dia: entregadosHoy.length,
-            enReparto,
-            pendienteReparto,
-            pendienteTakeaway,
-          });
-
-          setPedidos(visibles);
-        })
-        .catch(() => {
-          setSnackbar({ mensaje: "❌ Error cargando pedidos", tipo: "error" });
+        const pedidosDelDia = data.filter((p: Pedido) => {
+          const fecha = new Date(p.fechaPedido);
+          return fecha.toDateString() === hoyStr;
         });
-    };
 
-    obtenerPedidos();
-    const intervalo = setInterval(obtenerPedidos, 5000);
-    return () => clearInterval(intervalo);
-  }, []);
+        const entregadosHoy = pedidosDelDia.filter(
+          (p) => p.estado.toLowerCase() === "entregado"
+        );
+
+        const entregadosMes = data.filter((p: Pedido) => {
+          const fecha = new Date(p.fechaPedido);
+          return (
+            fecha.getMonth() === mesActual &&
+            fecha.getFullYear() === añoActual &&
+            p.estado.toLowerCase() === "entregado"
+          );
+        });
+
+        const visibles = pedidosDelDia
+        .filter((p) => {
+          if (rolGuardado === "delivery") {
+            return (
+              p.tipoEntrega.toLowerCase() === "delivery" &&
+              ['ready', "in-distribution"].includes(p.estado)
+            );
+          }
+          return true; // mostrar todo si no es delivery
+        })
+        .sort((a, b) => new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime());
+
+        const nuevos = visibles.filter((p) => p.estado === "pending").length;
+
+        const enReparto = visibles.filter((p) =>
+          p.estado === "in-distribution" && p.tipoEntrega.toLowerCase() === "delivery"
+        ).length;
+
+        const pendienteReparto = visibles.filter(
+          (p) =>
+            ["pending", "in-preparation", "ready"].includes(p.estado) &&
+            p.tipoEntrega.toLowerCase() === "delivery"
+        ).length;
+
+        const pendienteTakeaway = visibles.filter(
+          (p) =>
+            ["pending", "in-preparation"].includes(p.estado) &&
+            p.tipoEntrega.toLowerCase() === "takeaway"
+        ).length;
+
+        setResumen({
+          totalMes: entregadosMes.length,
+          pendientes: nuevos,
+          dia: entregadosHoy.length,
+          enReparto,
+          pendienteReparto,
+          pendienteTakeaway,
+        });
+
+        setPedidos(visibles);
+      })
+      .catch(() => {
+        setSnackbar({ mensaje: "❌ Error cargando pedidos", tipo: "error" });
+      });
+  };
+
+  obtenerPedidos();
+  const intervalo = setInterval(obtenerPedidos, 65000);
+  return () => clearInterval(intervalo);
+}, []);
+
 
   const actualizarEstado = async (id: string, nuevoEstado: string) => {
     const token = localStorage.getItem("token");
@@ -152,24 +171,23 @@ export const Dashboard = () => {
   return (
     <div className="panel-content">
       <Box
-      onClick={() => setMostrarDashboardCards(!mostrarDashboardCards)}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        cursor: 'pointer',
-        userSelect: 'none',
-        gap: 1, // espacio entre ícono y texto
-        mb: 2,
-      }}
-    >
-      <span style={{ fontSize: '1.2rem' }}>
-        {mostrarDashboardCards ? '▼' : '►'}
-      </span>
-      <DashboardIcon />
-      <Typography variant="h4" component="span">
-        DASHBOARD
-      </Typography>
-    </Box>
+        onClick={() => setMostrarDashboardCards(!mostrarDashboardCards)}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          cursor: "pointer",
+          userSelect: "none",
+          gap: 1,
+          mb: 2,
+        }}
+      >
+        <span style={{ fontSize: "1.2rem" }}>{mostrarDashboardCards ? "▼" : "►"}</span>
+        <DashboardIcon />
+        <Typography variant="h4" component="span">
+          DASHBOARD
+        </Typography>
+      </Box>
+
       {mostrarDashboardCards && (
         <div className="dashboard-cards">
           <div className="card">
@@ -180,10 +198,12 @@ export const Dashboard = () => {
             <div className="card-label">📦 PENDIENTE REPARTO</div>
             <div className="card-number">{resumen.pendienteReparto}</div>
           </div>
-          <div className="card">
-            <div className="card-label">🍱 PENDIENTE TAKEAWAY</div>
-            <div className="card-number">{resumen.pendienteTakeaway}</div>
-          </div>
+          {rol !== "delivery" && (
+            <div className="card">
+              <div className="card-label">🍱 PENDIENTE TAKEAWAY</div>
+              <div className="card-number">{resumen.pendienteTakeaway}</div>
+            </div>
+          )}
           <div className="card">
             <div className="card-label">🛵 EN REPARTO (HOY)</div>
             <div className="card-number">{resumen.enReparto}</div>
@@ -205,9 +225,8 @@ export const Dashboard = () => {
         </div>
       )}
 
-      {/* PEDIDOS DEL DÍA */}
       <Typography variant="h4" mb={2}>
-        <InventoryIcon/>PEDIDOS PARA HOY
+        <InventoryIcon /> PEDIDOS PARA HOY
       </Typography>
       <div className="pedidos-cards">
         {pedidos.map((pedido) => (
@@ -227,11 +246,10 @@ export const Dashboard = () => {
             <p><strong>Entrega:</strong> {pedido.tipoEntrega}</p>
             <p><strong>Dirección:</strong> {pedido.address || "-"}</p>
             <p><strong>Comentario:</strong> {pedido.comentario || "-"}</p>
-            <p><strong>Estado:</strong> {pedido.estado}</p>
+            <p><strong>Estado:</strong> {estadosTraducidos[pedido.estado] || pedido.estado}</p>
             <p><strong>Fecha:</strong> {new Date(pedido.fechaPedido).toLocaleString()}</p>
-            {/* EL OWNER PUEDE ACTUALIZAR EL ESTADO */}
-            {rol === "owner" && (
-             <TextField
+            {rol === "delivery" && (
+            <TextField
               select
               label="Estado"
               value={pedido.estado}
@@ -241,12 +259,34 @@ export const Dashboard = () => {
               variant="outlined"
               style={{ marginTop: "0.5rem" }}
             >
-              <MenuItem value="pendiente">Pendiente</MenuItem>
-              <MenuItem value="en preparación">En preparación</MenuItem>
-              <MenuItem value="en reparto">En reparto</MenuItem>
-              <MenuItem value="entregado">Entregado</MenuItem>
-              <MenuItem value="cancelado">Cancelado</MenuItem>
+              {pedido.estado === "ready" && (
+                <MenuItem value="in-distribution">En reparto</MenuItem>
+              )}
+              {pedido.estado === "in-distribution" && (
+                <MenuItem value="entregado">Entregado</MenuItem>
+              )}
             </TextField>
+          )}
+            {rol === "owner" && (
+              <TextField
+                select
+                label="Estado"
+                value={pedido.estado}
+                onChange={(e) => actualizarEstado(pedido._id, e.target.value)}
+                size="small"
+                fullWidth
+                variant="outlined"
+                style={{ marginTop: "0.5rem" }}
+              >
+              <MenuItem value="pending">Pendiente</MenuItem>
+              <MenuItem value="in-preparation">En preparación</MenuItem>
+               {pedido.tipoEntrega === "delivery" && [
+                <MenuItem value="ready">Listo para reparto</MenuItem>,
+                <MenuItem value="in-distribution">En reparto</MenuItem>,
+              ]}                                                                                                                                               
+                <MenuItem value="entregado">Entregado</MenuItem>
+                <MenuItem value="cancelado">Cancelado</MenuItem>
+              </TextField>
             )}
           </div>
         ))}

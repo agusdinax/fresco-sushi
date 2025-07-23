@@ -7,15 +7,15 @@ require('dotenv').config();
 
 // Registro
 router.post('/register', async (req, res) => {
-  const { nombreUsuario, password, nombre, rol } = req.body;
-
+  const { nombreUsuario, password, nombre, rol, email } = req.body;
+    console.log(req.body) 
   try {
     const existingUser = await Usuario.findOne({ nombreUsuario });
     if (existingUser) {
       return res.status(400).json({ message: 'El nombre de usuario ya está en uso' });
     }
 
-    const nuevoUsuario = new Usuario({ nombreUsuario, password, nombre, rol });
+    const nuevoUsuario = new Usuario({ nombreUsuario, password, nombre, rol, email });
     await nuevoUsuario.save();
 
     res.status(201).json({ message: 'Usuario creado con éxito' });
@@ -28,7 +28,7 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   const { nombreUsuario, password } = req.body;
-
+console.log(req.body) 
   try {
     const usuario = await Usuario.findOne({ nombreUsuario });
     if (!usuario) {

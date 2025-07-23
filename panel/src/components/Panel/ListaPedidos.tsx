@@ -26,7 +26,7 @@ interface Pedido {
   telefono: string;
   productos: Producto[];
   total: number;
-  estado: "pendiente" | "en preparación" | "en reparto" | "entregado";
+  estado: "pending" | "in-preparation" | "ready" | "in-distribution" | "entregado" | "cancelado";
   fechaPedido: string;
   usuario: string;
   metodoPago: string;
@@ -34,6 +34,16 @@ interface Pedido {
   address?: string;
   comentario?: string;
 }
+
+const estadosTraducidos: Record<string, string> = {
+  pending: "Pendiente",
+  "in-preparation": "En preparación",
+  ready: "Listo para reparto",
+  "in-distribution": "En reparto",
+  entregado: "Entregado",
+  cancelado: "Cancelado",
+};
+
 
 const METODOS_PAGO = ["", "efectivo", "transferencia"];
 const TIPOS_ENTREGA = ["", "delivery", "takeaway"];
@@ -199,9 +209,10 @@ export const ListaPedidos = () => {
       size="small"
     >
       <MenuItem value="">Todos</MenuItem>
-      <MenuItem value="pendiente">Pendiente</MenuItem>
-      <MenuItem value="en preparación">En preparación</MenuItem>
-      <MenuItem value="en reparto">En reparto</MenuItem>
+      <MenuItem value="pending">Pendiente</MenuItem>
+      <MenuItem value="in-preparation">En preparación</MenuItem>
+      <MenuItem value="ready">Pedido Listo</MenuItem>
+      <MenuItem value="in-distribution">En reparto</MenuItem>
       <MenuItem value="entregado">Entregado</MenuItem>
       <MenuItem value="cancelado">Cancelado</MenuItem>
     </TextField>
@@ -264,7 +275,7 @@ export const ListaPedidos = () => {
         )}
         {estado && (
           <span className="filtro-aplicado" onClick={() => quitarFiltro("estado")}>
-            Estado: {estado} ×
+            Estado: {estadosTraducidos[estado] || estado} ×
           </span>
         )}
         {filtros.fechas.startDate && filtros.fechas.endDate && (
@@ -287,7 +298,7 @@ export const ListaPedidos = () => {
                 }
               >
                 <div className="resumen">
-                  <strong>{pedido.nombreCliente}</strong> - {pedido.estado} - $
+                  <strong>{pedido.nombreCliente}</strong> - {estadosTraducidos[pedido.estado] || pedido.estado} - $
                   {pedido.total.toLocaleString("es-AR")}
                   <br />
                   <small>{dayjs(pedido.fechaPedido).format("HH:mm")} hs</small>
