@@ -46,92 +46,101 @@ export const Dashboard = () => {
   const [mostrarDashboardCards, setMostrarDashboardCards] = useState(true);
 
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  const rolGuardado = localStorage.getItem("rol");
-  setRol(rolGuardado);
+    const token = localStorage.getItem("token");
+    const rolGuardado = localStorage.getItem("rol");
+    setRol(rolGuardado);
 
-  const obtenerPedidos = () => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!Array.isArray(data)) return;
-
-        const hoy = new Date();
-        const hoyStr = hoy.toDateString();
-        const mesActual = hoy.getMonth();
-        const añoActual = hoy.getFullYear();
-
-        const pedidosDelDia = data.filter((p: Pedido) => {
-          const fecha = new Date(p.fechaPedido);
-          return fecha.toDateString() === hoyStr;
-        });
-
-        const entregadosHoy = pedidosDelDia.filter(
-          (p) => p.estado.toLowerCase() === "entregado"
-        );
-
-        const entregadosMes = data.filter((p: Pedido) => {
-          const fecha = new Date(p.fechaPedido);
-          return (
-            fecha.getMonth() === mesActual &&
-            fecha.getFullYear() === añoActual &&
-            p.estado.toLowerCase() === "entregado"
-          );
-        });
-
-        const visibles = pedidosDelDia
-        .filter((p) => {
-          if (rolGuardado === "delivery") {
-            return (
-              p.tipoEntrega.toLowerCase() === "delivery" &&
-              ['ready', "in-distribution"].includes(p.estado)
-            );
-          }
-          return true; // mostrar todo si no es delivery
-        })
-        .sort((a, b) => new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime());
-
-        const nuevos = visibles.filter((p) => p.estado === "pending").length;
-
-        const enReparto = visibles.filter((p) =>
-          p.estado === "in-distribution" && p.tipoEntrega.toLowerCase() === "delivery"
-        ).length;
-
-        const pendienteReparto = visibles.filter(
-          (p) =>
-            ["pending", "in-preparation", "ready"].includes(p.estado) &&
-            p.tipoEntrega.toLowerCase() === "delivery"
-        ).length;
-
-        const pendienteTakeaway = visibles.filter(
-          (p) =>
-            ["pending", "in-preparation"].includes(p.estado) &&
-            p.tipoEntrega.toLowerCase() === "takeaway"
-        ).length;
-
-        setResumen({
-          totalMes: entregadosMes.length,
-          pendientes: nuevos,
-          dia: entregadosHoy.length,
-          enReparto,
-          pendienteReparto,
-          pendienteTakeaway,
-        });
-
-        setPedidos(visibles);
+    const obtenerPedidos = () => {
+      fetch(`${import.meta.env.VITE_API_URL}/api/pedidos`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .catch(() => {
-        setSnackbar({ mensaje: "❌ Error cargando pedidos", tipo: "error" });
-      });
-  };
+        .then((res) => res.json())
+        .then((data) => {
+          if (!Array.isArray(data)) return;
 
-  obtenerPedidos();
-  const intervalo = setInterval(obtenerPedidos, 65000);
-  return () => clearInterval(intervalo);
-}, []);
+          const hoy = new Date();
+          const hoyStr = hoy.toDateString();
+          const mesActual = hoy.getMonth();
+          const añoActual = hoy.getFullYear();
 
+          const pedidosDelDia = data.filter((p: Pedido) => {
+            const fecha = new Date(p.fechaPedido);
+            return fecha.toDateString() === hoyStr;
+          });
+
+          const entregadosHoy = pedidosDelDia.filter((p) => {
+            if (rolGuardado === "delivery") {
+              return (
+                p.estado.toLowerCase() === "entregado" &&
+                p.tipoEntrega.toLowerCase() === "delivery"
+              );
+            }
+            return p.estado.toLowerCase() === "entregado";
+          });
+
+          const entregadosMes = data.filter((p: Pedido) => {
+            const fecha = new Date(p.fechaPedido);
+            return (
+              fecha.getMonth() === mesActual &&
+              fecha.getFullYear() === añoActual &&
+              p.estado.toLowerCase() === "entregado"
+            );
+          });
+
+          const visibles = pedidosDelDia
+            .filter((p) => {
+              if (rolGuardado === "delivery") {
+                return (
+                  p.tipoEntrega === "delivery" &&
+                  ["ready", "in-distribution", 'entregado'].includes(p.estado)
+                );
+              }
+              return true;
+            })
+            .sort((a, b) => new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime());
+          
+          const nuevos = visibles.filter((p) =>
+            rolGuardado === "delivery" ? p.estado === "ready" : p.estado === "pending"
+          ).length;
+
+          const enReparto = visibles.filter(
+            (p) =>
+              p.estado === "in-distribution" &&
+              p.tipoEntrega.toLowerCase() === "delivery"
+          ).length;
+
+          const pendienteReparto = visibles.filter(
+            (p) =>
+              ["pending", "in-preparation", "ready"].includes(p.estado) &&
+              p.tipoEntrega.toLowerCase() === "delivery"
+          ).length;
+
+          const pendienteTakeaway = visibles.filter(
+            (p) =>
+              ["pending", "in-preparation"].includes(p.estado) &&
+              p.tipoEntrega.toLowerCase() === "takeaway"
+          ).length;
+
+          setResumen({
+            totalMes: entregadosMes.length,
+            pendientes: nuevos,
+            dia: entregadosHoy.length,
+            enReparto,
+            pendienteReparto,
+            pendienteTakeaway,
+          });
+
+          setPedidos(visibles);
+        })
+        .catch(() => {
+          setSnackbar({ mensaje: "❌ Error cargando pedidos", tipo: "error" });
+        });
+    };
+
+    obtenerPedidos();
+    const intervalo = setInterval(obtenerPedidos, 65000);
+    return () => clearInterval(intervalo);
+  }, []);
 
   const actualizarEstado = async (id: string, nuevoEstado: string) => {
     const token = localStorage.getItem("token");
@@ -248,25 +257,36 @@ export const Dashboard = () => {
             <p><strong>Comentario:</strong> {pedido.comentario || "-"}</p>
             <p><strong>Estado:</strong> {estadosTraducidos[pedido.estado] || pedido.estado}</p>
             <p><strong>Fecha:</strong> {new Date(pedido.fechaPedido).toLocaleString()}</p>
-            {rol === "delivery" && (
-            <TextField
-              select
-              label="Estado"
-              value={pedido.estado}
-              onChange={(e) => actualizarEstado(pedido._id, e.target.value)}
-              size="small"
-              fullWidth
-              variant="outlined"
-              style={{ marginTop: "0.5rem" }}
-            >
-              {pedido.estado === "ready" && (
-                <MenuItem value="in-distribution">En reparto</MenuItem>
+
+            {/* Select para delivery */}
+            {rol === "delivery" &&
+              (pedido.estado === "ready" || pedido.estado === "in-distribution") && (
+                <TextField
+                  select
+                  label="Estado"
+                  value={pedido.estado}
+                  onChange={(e) => actualizarEstado(pedido._id, e.target.value)}
+                  size="small"
+                  fullWidth
+                  variant="outlined"
+                  style={{ marginTop: "0.5rem" }}
+                >
+                  {pedido.estado === "ready" &&
+                    [
+                      <MenuItem key="ready" value="ready">Listo para reparto</MenuItem>,
+                      <MenuItem key="in-distribution" value="in-distribution">En reparto</MenuItem>,
+                    ]
+                  }
+                  {pedido.estado === "in-distribution" &&
+                    [
+                      <MenuItem key="in-distribution" value="in-distribution">En reparto</MenuItem>,
+                      <MenuItem key="entregado" value="entregado">Entregado</MenuItem>,
+                    ]
+                  }
+                </TextField>
               )}
-              {pedido.estado === "in-distribution" && (
-                <MenuItem value="entregado">Entregado</MenuItem>
-              )}
-            </TextField>
-          )}
+
+            {/* Select para owner */}
             {rol === "owner" && (
               <TextField
                 select
@@ -278,12 +298,12 @@ export const Dashboard = () => {
                 variant="outlined"
                 style={{ marginTop: "0.5rem" }}
               >
-              <MenuItem value="pending">Pendiente</MenuItem>
-              <MenuItem value="in-preparation">En preparación</MenuItem>
-               {pedido.tipoEntrega === "delivery" && [
-                <MenuItem value="ready">Listo para reparto</MenuItem>,
-                <MenuItem value="in-distribution">En reparto</MenuItem>,
-              ]}                                                                                                                                               
+                <MenuItem value="pending">Pendiente</MenuItem>
+                <MenuItem value="in-preparation">En preparación</MenuItem>
+                {pedido.tipoEntrega === "delivery" && [
+                  <MenuItem key="ready" value="ready">Listo para reparto</MenuItem>,
+                  <MenuItem key="in-distribution" value="in-distribution">En reparto</MenuItem>,
+                ]}
                 <MenuItem value="entregado">Entregado</MenuItem>
                 <MenuItem value="cancelado">Cancelado</MenuItem>
               </TextField>

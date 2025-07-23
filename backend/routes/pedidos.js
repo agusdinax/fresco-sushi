@@ -25,7 +25,10 @@ router.get('/', protect, async (req, res) => {
     if (req.usuario.rol === 'owner') {
       pedidos = await Pedido.find();
     } else if (req.usuario.rol === 'delivery') {
-      pedidos = await Pedido.find({ estado: 'in-distribution' }); 
+       pedidos = await Pedido.find({
+        estado: { $in: ["ready", "in-distribution", "entregado"] },
+        tipoEntrega: "delivery"
+      });
     } else {
       pedidos = [];
     }
@@ -38,7 +41,7 @@ router.get('/', protect, async (req, res) => {
 });
 
 // Actualizar estado del pedido (solo owner)
-router.patch('/:id/estado', protect, restrictTo('owner'), async (req, res) => {
+router.patch('/:id/estado', protect, async (req, res) => {
   try {
     const { estado } = req.body;
     const pedido = await Pedido.findById(req.params.id);
